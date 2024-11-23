@@ -1,0 +1,244 @@
+{% extends 'posts/base.html' %}
+{% block title %} {{ post.title }} {% endblock %}
+{% block content %}
+{% load custom_filters %}
+{% load static %}
+
+    
+    <section class="single-post-content">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-9 post-content" data-aos="fade-up">
+  
+              <!-- ======= Single Post Content ======= -->
+              <div class="single-post">
+                <div class="post-meta">
+                    <span class="date">{{ post.category.name }}</span> 
+                    <span class="mx-1">&bullet;</span> 
+                    <span>{{ post.published_date|date:"M jS 'y" }}</span> 
+                    <span class="mx-1">&bullet;</span> 
+                    <span>{{ post.author.first_name }} {{ post.author.last_name }}</span>
+                </div>
+
+                <h1 class="mb-5">{{ post.title }}</h1>
+
+                <p>{{ post.excerpt }}</p>
+
+                {% if post.image %}
+                <figure class="my-4 position-relative" style="padding-top: 57.1%;">
+                  <img 
+                    src="{{ post.image.url }}" 
+                    alt="{{ post.title }}" 
+                    class="position-absolute top-0 pe-5 start-0 w-100 h-100 object-fit-cover"
+                  >
+                </figure>
+                {% endif %}
+
+                <p>{{ post.content|safe }}</p>
+                
+                <!-- Reactions Section -->
+                <div class="reactions mt-4">
+                    <h5>Reactions</h5>
+                    <div class="reaction-buttons d-flex justify-content-start">
+                      {% for reaction_type, reaction_label in post.reactions.model.REACTION_CHOICES %}
+                      <button 
+                          class="btn btn-reaction me-2 {% if user_reaction and user_reaction.reaction_type == reaction_type %}active{% endif %}"
+                          data-reaction="{{ reaction_type }}"
+                      >
+                          {{ reaction_label }} 
+                          ({{ reaction_counts|get_item:reaction_type }})
+                      </button>
+                      {% endfor %}
+                  </div>
+                </div>
+                
+                <!-- Bookmark Button -->
+                <div class="bookmark mt-3">
+                    <button class="btn btn-outline-primary bookmark-toggle">
+                        Bookmark 
+                        ({{ post.bookmarked_by.count }})
+                    </button>
+                </div>
+              </div>
+  
+              <!-- ======= Comments ======= -->
+              {% if post.allow_comments and user.is_authenticated %}
+                <div class="comments mt-5">
+                    <h5 class="comment-title py-4">{{ comments.count }} Comments</h5>
+                    
+                    {% for comment in comments %}
+                    <div class="comment d-flex mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="avatar avatar-sm rounded-circle">
+                                <img class="avatar-img" src="{% static 'img/default-avatar.png' %}" alt="{{ comment.name }}">
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-2 ms-sm-3">
+                            <div class="comment-meta d-flex align-items-baseline">
+                                <h6 class="me-2">{{ comment.name }}</h6>
+                                <span class="text-muted">{{ comment.created_at|timesince }} ago</span>
+                            </div>
+                            <div class="comment-body">
+                                {{ comment.comment }}
+                            </div>
+
+                            <!-- Reply Button -->
+                            <button class="btn btn-sm btn-outline-secondary reply-toggle mt-2" 
+                                    data-comment-id="{{ comment.id }}">
+                                Reply
+                            </button>
+
+                            <!-- Reply Form (Hidden by default) -->
+                            <form method="post" action="{% url 'add_comment' post.slug %}" 
+                                  class="reply-form mt-2" 
+                                  id="reply-form-{{ comment.id }}" 
+                                  style="display:none;">
+                                {% csrf_token %}
+                                <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                                <div class="form-group">
+                                    <textarea name="comment" class="form-control" 
+                                              placeholder="Write your reply" 
+                                              required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary mt-2">Post Reply</button>
+                                <button type="button" class="btn btn-secondary mt-2 ml-2 cancel-reply">Cancel</button>
+                            </form>
+
+                            <!-- Replies -->
+                            {% if comment.replies.all %}
+                            <div class="comment-replies bg-light p-3 mt-3 rounded">
+                                <h6 class="comment-replies-title mb-4 text-muted text-uppercase">
+                                    {{ comment.replies.count }} Replies
+                                </h6>
+
+                                {% for reply in comment.replies.all %}
+                                <div class="reply d-flex mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar avatar-sm rounded-circle">
+                                            <img class="avatar-img" src="{% static 'img/default-avatar.png' %}" alt="{{ reply.name }}">
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-2 ms-sm-3">
+                                        <div class="reply-meta d-flex align-items-baseline">
+                                            <h6 class="mb-0 me-2">{{ reply.name }}</h6>
+                                            <span class="text-muted">{{ reply.created_at|timesince }} ago</span>
+                                        </div>
+                                        <div class="reply-body">
+                                            {{ reply.comment }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+              
+              <!-- ======= Comments Form ======= -->
+              {% if user.is_authenticated and post.allow_comments %}
+              <div class="row justify-content-center mt-5">
+                <div class="col-lg-12">
+                    <h5 class="comment-title">Leave a Comment</h5>
+                    <form method="post" action="{% url 'add_comment' post.slug %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="comment-message">Message</label>
+                                <textarea name="comment" class="form-control" id="comment-message" placeholder="Enter your comment" cols="30" rows="10" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <input type="submit" class="btn btn-primary" value="Post comment">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+              </div>
+              {% elif not user.is_authenticated %}
+              <div class="alert alert-info">
+                Please <a href="{% url 'login' %}">log in</a> to leave a comment.
+              </div>
+              {% endif %}
+  
+            </div>
+            
+            <!-- Sidebar content remains the same -->
+            <div class="col-md-3">
+              <!-- ... existing sidebar code ... -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {% block extra_js %}
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reaction handling
+            const reactionButtons = document.querySelectorAll('.btn-reaction');
+            reactionButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const reactionType = this.dataset.reaction;
+                    fetch(`/posts/{{ post.slug }}/react/${reactionType}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success' || data.status === 'removed') {
+                            location.reload();
+                        }
+                    });
+                });
+            });
+
+            // Bookmark handling
+            const bookmarkToggle = document.querySelector('.bookmark-toggle');
+            if (bookmarkToggle) {
+                bookmarkToggle.addEventListener('click', function() {
+                    fetch(`/posts/{{ post.slug }}/bookmark/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'added' || data.status === 'removed') {
+                            location.reload();
+                        }
+                    });
+                });
+            }
+        });
+      </script>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reply form toggle
+            const replyToggles = document.querySelectorAll('.reply-toggle');
+            const cancelReplyButtons = document.querySelectorAll('.cancel-reply');
+
+            replyToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const commentId = this.dataset.commentId;
+                    const replyForm = document.getElementById(`reply-form-${commentId}`);
+                    replyForm.style.display = 'block';
+                });
+            });
+
+            cancelReplyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const replyForm = this.closest('.reply-form');
+                    replyForm.style.display = 'none';
+                    replyForm.querySelector('textarea').value = '';
+                });
+            });
+        });
+        </script>
+      {% endblock %}
+{% endblock %}
