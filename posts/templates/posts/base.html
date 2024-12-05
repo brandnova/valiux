@@ -30,6 +30,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=Inter:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
+    <!-- Add Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <!-- Vendor CSS Files -->
     <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
@@ -187,7 +190,7 @@
                         <div class="col-md-6">
                             <div class="social-links mb-3 mb-lg-0 text-center text-md-end">
                                 {% for link in site_settings.social_media_links.all %}
-                                    <a href="{{ link.url }}" target="_blank" class=""><i class="bi bi-{{ link.icon_class }}"></i></a>
+                                    <a href="{{ link.url }}" target="_blank" class="mx-2"><i class="bi bi-{{ link.icon_class }}"></i></a>
                                 {% endfor %}
                             </div>
                         </div>

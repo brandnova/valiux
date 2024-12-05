@@ -1,0 +1,344 @@
+{% extends 'posts/base.html' %}
+{% block title %} {{ post.title }} {% endblock %}
+{% block content %}
+{% load custom_filters %}
+{% load static %}
+
+<section class="single-post-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9 post-content" data-aos="fade-up">
+
+                <!-- ======= Single Post Content ======= -->
+                <div class="single-post">
+                    <div class="post-meta">
+                        <span class="date">{{ post.category.name }}</span> 
+                        <span class="mx-1">&bullet;</span> 
+                        <span>{{ post.published_date|date:"M jS 'y" }}</span> 
+                        <span class="mx-1">&bullet;</span> 
+                        <span>{{ post.author.first_name }} {{ post.author.last_name }}</span>
+                        <span class="mx-1">&bullet;</span>
+                        <span><i class="bi bi-eye-fill"></i> {{ post.views }} Views</span>
+                    </div>
+
+                    <h1 class="mb-5">{{ post.title }}</h1>
+
+                    <p>{{ post.excerpt }}</p>
+
+                    {% if post.image %}
+                    <figure class="my-4 position-relative" style="padding-top: 57.1%;">
+                        <img 
+                            src="{{ post.image.url }}" 
+                            alt="{{ post.title }}" 
+                            class="position-absolute top-0 pe-5 start-0 w-100 h-100 object-fit-cover"
+                        >
+                    </figure>
+                    {% endif %}
+
+                    <div class="blog-post-content">
+                        {{ post.content|safe }}
+                    </div>
+                    
+                    <!-- Reactions Section -->
+                    <div class="reactions mt-4">
+                        <h5>Reactions</h5>
+                        <div class="btn-group" role="group" aria-label="Post Reactions">
+                            {% for reaction_type, reaction_label in post.reactions.model.REACTION_CHOICES %}
+                            <button 
+                                type="button"
+                                class="btn btn-outline-secondary reaction-btn {% if user_reaction and user_reaction.reaction_type == reaction_type %}active{% endif %}"
+                                data-reaction="{{ reaction_type }}"
+                                data-slug="{{ post.slug }}"
+                            >
+                                <i class="bi bi-emoji-{{ reaction_type }}"></i> 
+                                {{ reaction_label }} 
+                                (<span class="reaction-count" data-count-type="{{ reaction_type }}">
+                                    {{ reaction_counts|get_item:reaction_type }}
+                                </span>)
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Bookmark Button -->
+                    <div class="bookmark mt-3">
+                        <button class="btn btn-outline-secondary bookmark-btn" 
+                                data-slug="{{ post.slug }}">
+                            <i class="bi bi-bookmark{% if not user.is_authenticated or not post.bookmarked_by.exists %}-plus{% endif %}"></i>
+                            Bookmark 
+                            (<span class="bookmark-count">{{ post.bookmarked_by.count }}</span>)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ======= Comments ======= -->
+                {% if post.allow_comments and user.is_authenticated %}
+                <div class="comments mt-5">
+                    <h5 class="comment-title py-4">Comments (<span id="comment-count">{{ comments.count }}</span>)</h5>
+                    
+                    <!-- Comment Form -->
+                    <form id="comment-form" class="mb-4">
+                        {% csrf_token %}
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" placeholder="Leave a comment" 
+                                      id="comment-input" 
+                                      name="comment" 
+                                      required></textarea>
+                            <label for="comment-input">Your Comment</label>
+                            <input type="hidden" id="parent-comment-id" name="parent_id" value="">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Post Comment</button>
+                    </form>
+
+                    <!-- Comments List -->
+                    <div id="comments-list">
+                        {% for comment in comments %}
+                        <div class="comment d-flex mb-4" data-comment-id="{{ comment.id }}">
+                            <div class="flex-shrink-0">
+                                <div class="avatar avatar-sm rounded-circle">
+                                    <img class="avatar-img" src="{% static 'img/default-avatar.png' %}" alt="{{ comment.name }}">
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-2 ms-sm-3">
+                                <div class="comment-meta d-flex align-items-baseline">
+                                    <h6 class="me-2">{{ comment.name }}</h6>
+                                    <span class="text-muted">{{ comment.created_at|timesince }} ago</span>
+                                </div>
+                                <div class="comment-body">
+                                    {{ comment.comment }}
+                                </div>
+
+                                <!-- Reply Button -->
+                                <button class="btn btn-sm btn-outline-secondary reply-btn mt-2" 
+                                        data-parent-id="{{ comment.id }}">
+                                    <i class="bi bi-reply"></i> Reply
+                                </button>
+
+                                <!-- Replies -->
+                                {% if comment.replies.all %}
+                                <div class="comment-replies bg-light p-3 mt-3 rounded">
+                                    <h6 class="comment-replies-title mb-4 text-muted text-uppercase">
+                                        {{ comment.replies.count }} Replies
+                                    </h6>
+
+                                    {% for reply in comment.replies.all %}
+                                    <div class="reply d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-sm rounded-circle">
+                                                <img class="avatar-img" src="{% static 'img/default-avatar.png' %}" alt="{{ reply.name }}">
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-2 ms-sm-3">
+                                            <div class="reply-meta d-flex align-items-baseline">
+                                                <h6 class="mb-0 me-2">{{ reply.name }}</h6>
+                                                <span class="text-muted">{{ reply.created_at|timesince }} ago</span>
+                                            </div>
+                                            <div class="reply-body">
+                                                {{ reply.comment }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% elif not user.is_authenticated %}
+                <div class="alert alert-info mt-4">
+                    Please <a href="{% url 'login' %}">log in</a> to leave a comment.
+                </div>
+                {% endif %}
+
+            </div>
+            
+            <!-- Sidebar content remains the same -->
+            <div class="col-md-3">
+                <!-- ... existing sidebar code ... -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const slug = '{{ post.slug }}';
+
+    // Reaction Handler
+    document.querySelectorAll('.reaction-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!{{ user.is_authenticated|yesno:"true,false" }}) {
+                alert('Please log in to react to this post.');
+                return;
+            }
+
+            const reactionType = this.dataset.reaction;
+            fetch(`/posts/${slug}/react/${reactionType}/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update reaction counts
+                Object.keys(data.reaction_counts).forEach(rt => {
+                    const countEl = document.querySelector(`[data-count-type="${rt}"]`);
+                    if (countEl) countEl.textContent = data.reaction_counts[rt];
+                });
+
+                // Toggle active state
+                document.querySelectorAll('.reaction-btn').forEach(b => b.classList.remove('active'));
+                if (data.status !== 'removed') {
+                    this.classList.add('active');
+                }
+            });
+        });
+    });
+
+    // Bookmark Handler
+    document.querySelector('.bookmark-btn').addEventListener('click', function() {
+        if (!{{ user.is_authenticated|yesno:"true,false" }}) {
+            alert('Please log in to bookmark this post.');
+            return;
+        }
+
+        fetch(`/posts/${slug}/bookmark/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const bookmarkIcon = this.querySelector('i');
+            const bookmarkCount = this.querySelector('.bookmark-count');
+            
+            if (data.status === 'added') {
+                bookmarkIcon.classList.remove('bi-bookmark-plus');
+                bookmarkIcon.classList.add('bi-bookmark');
+            } else {
+                bookmarkIcon.classList.remove('bi-bookmark');
+                bookmarkIcon.classList.add('bi-bookmark-plus');
+            }
+            bookmarkCount.textContent = data.bookmark_count;
+        });
+    });
+
+    // Comment Submission Handler
+    document.getElementById('comment-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!{{ user.is_authenticated|yesno:"true,false" }}) {
+            alert('Please log in to comment.');
+            return;
+        }
+
+        const formData = new FormData(this);
+        fetch(`/posts/${slug}/comment/add/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const commentsList = document.getElementById('comments-list');
+                const newComment = document.createElement('div');
+                newComment.classList.add('comment', 'd-flex', 'mb-4');
+                newComment.dataset.commentId = data.comment.id;
+                
+                newComment.innerHTML = `
+                    <div class="flex-shrink-0">
+                        <div class="avatar avatar-sm rounded-circle">
+                            <img class="avatar-img" src="{% static 'img/default-avatar.png' %}" alt="${data.comment.name}">
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2 ms-sm-3">
+                        <div class="comment-meta d-flex align-items-baseline">
+                            <h6 class="me-2">${data.comment.name}</h6>
+                            <span class="text-muted">${data.comment.created_at}</span>
+                        </div>
+                        <div class="comment-body">
+                            ${data.comment.comment}
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary reply-btn mt-2" 
+                                data-parent-id="${data.comment.id}">
+                            <i class="bi bi-reply"></i> Reply
+                        </button>
+                    </div>
+                `;
+
+                // If it's a reply, append to parent comment
+                if (data.comment.parent_id) {
+                    const parentComment = document.querySelector(`[data-comment-id="${data.comment.parent_id}"]`);
+                    if (parentComment) {
+                        const repliesContainer = parentComment.querySelector('.comment-replies') || document.createElement('div');
+                        if (!parentComment.querySelector('.comment-replies')) {
+                            repliesContainer.classList.add('comment-replies', 'bg-light', 'p-3', 'mt-3', 'rounded');
+                            repliesContainer.innerHTML = '<h6 class="comment-replies-title mb-4 text-muted text-uppercase">Replies</h6>';
+                            parentComment.querySelector('.flex-grow-1').appendChild(repliesContainer);
+                        }
+                        const replyElement = document.createElement('div');
+                        replyElement.classList.add('reply', 'd-flex', 'mb-3');
+                        replyElement.innerHTML = newComment.innerHTML;
+                        repliesContainer.appendChild(replyElement);
+                    }
+                } else {
+                    commentsList.prepend(newComment);
+                }
+
+                // Reset form
+                this.reset();
+                document.getElementById('parent-comment-id').value = '';
+
+                // Update comment count
+                const commentCount = document.getElementById('comment-count');
+                commentCount.textContent = parseInt(commentCount.textContent) + 1;
+
+                // Attach reply button event listeners
+                attachReplyListeners();
+            }
+        });
+    });
+
+    // Reply Button Handler
+    function attachReplyListeners() {
+        document.querySelectorAll('.reply-btn').forEach(btn => {
+            btn.removeEventListener('click', replyHandler); // Remove previous listeners
+            btn.addEventListener('click', replyHandler);
+        });
+    }
+
+    function replyHandler(e) {
+        const parentId = this.dataset.parentId;
+        const commentForm = document.getElementById('comment-form');
+        const parentCommentEl = this.closest('.comment');
+
+        // Set parent comment ID in hidden input
+        document.getElementById('parent-comment-id').value = parentId;
+
+        // Focus on comment input
+        const commentInput = document.getElementById('comment-input');
+        commentInput.focus();
+
+        // Optional: Scroll to comment form
+        commentForm.scrollIntoView({ behavior: 'smooth' });
+
+        // Optional: Add visual indication of reply context
+        const commentName = parentCommentEl.querySelector('h6').textContent;
+        commentInput.placeholder = `Replying to ${commentName}...`;
+    }
+
+    // Initial attachment of reply listeners
+    attachReplyListeners();
+});
+</script>
+{% endblock %}

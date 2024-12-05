@@ -15,7 +15,7 @@
 
                 {% for carou in random_post %}
                   <div class="swiper-slide">
-                      <a href="{% url 'post_detail' carou.slug %}" class="img-bg d-flex align-items-end rounded" style="background-image: url('{{ carou.image.url }}');">
+                      <a href="{% url 'post_detail' carou.slug %}" class="img-bg d-flex align-items-end rounded" style="background-image: url('{% if carou.image %}{{ carou.image.url }}{% endif %}');">
                           <div class="img-bg-inner">
                               <h2>{{ carou.title }}</h2>
                               <p>{{ carou.excerpt }}</p>
@@ -23,6 +23,7 @@
                       </a>
                   </div>
                 {% endfor %}
+
 
               </div>
               <div class="custom-swiper-button-next">
@@ -38,7 +39,7 @@
         </div>
       </div>
       <p class="text-center my-3">
-        lorem ipsum dolor sit
+        {{ site_settings.site_description }}
       </p>
     </section><!-- End Hero Slider Section -->
 
