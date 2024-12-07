@@ -1,111 +1,3 @@
-1. User Authentication:
-   - User registration
-   - User login
-   - User logout
-   - Password reset
-
-2. Blog Post Management:
-   - Create new post
-   - Edit existing post
-   - Delete post
-   - List all posts (with pagination)
-   - View single post
-   - Add social sharing buttons to posts
-
-3. Email Functionality:
-   - Send welcome email to newly authenticated users
-   - Send new post notifications to newsletter subscribers
-   - Implement bulk email system for custom emails (all users, single user, or selected users)
-   - Manage newsletter subscriptions
-
-4. Comment System:
-   - Add comment to post
-   - Delete comment (for comment author and admin)
-   - List comments for a post
-   - Add like and dislike functionality to post
-
-5. Category and Tag System:
-   - Create categories
-   - Assign categories to posts
-   - Add tags to posts (Using django taggit)
-   - Filter posts by categories, authors or tag
-
-6. Search Functionality:
-   - Search posts by title content or author
-
-7. User Profile:
-   - View user profile
-   - Edit user profile
-   - View posts by specific user
-
-8. RSS Feed:
-   - Generate RSS feed for latest posts
-
-9. Basic SEO:
-    - Generate sitemap
-
-GPT Suggest
-
-Your list is well-organized and covers a comprehensive set of features for a functional blog. Here are a few suggestions to enhance the user experience while keeping it simple:
-
-### 1. **User Authentication:**
-   - **Email Verification:** Adding email verification during registration can enhance security.
-   - **Social Login:** Consider implementing social login (e.g., Google, Facebook) for easier access.
-   - **Account Settings:** Allow users to change their email and password from their profile settings.
-
-### 2. **Blog Post Management:**
-   - **Post Drafts:** Implement a draft feature so users can save posts without publishing them immediately.
-   - **Autosave:** Consider adding an autosave feature when users are creating or editing posts.
-   - **Rich Text Editor:** Integrate a WYSIWYG editor like TinyMCE or CKEditor for better formatting options.
-
-### 3. **Email Functionality:**
-   - **Email Templates:** Use customizable email templates for different notifications.
-   - **Unsubscribe Option:** Make sure users can easily unsubscribe from newsletters.
-
-### 4. **Comment System:**
-   - **Comment Moderation:** Implement a moderation system where admins can approve comments before they are published.
-   - **Reply to Comments:** Allow threaded comments so users can reply to each other.
-   - **Spam Protection:** Consider integrating a tool like Akismet to filter out spam comments.
-
-### 5. **Category and Tag System:**
-   - **Tag Suggestions:** Provide tag suggestions as users type, based on existing tags.
-
-### 6. **Search Functionality:**
-   - **Autocomplete:** Add autocomplete functionality to the search bar for a smoother experience.
-   - **Advanced Filters:** Allow users to refine search results by date, popularity, or relevance.
-
-### 7. **User Profile:**
-   - **Profile Picture:** Let users upload a profile picture or use a Gravatar.
-   - **Follow Feature:** Allow users to follow each other and receive updates when a followed user posts.
-
-### 8. **RSS Feed:**
-   - **Feed Customization:** Let users choose the frequency of updates or categories they want to follow.
-
-### 9. **Basic SEO:**
-   - **Meta Descriptions:** Allow custom meta descriptions for each post.
-   - **Open Graph and Twitter Cards:** Implement Open Graph and Twitter Cards for better sharing previews on social media.
-
-### **Other Considerations:**
-   - **Dark Mode:** Consider offering a dark mode for users who prefer it.
-   - **Performance Optimization:** Ensure fast loading times with optimized images and caching strategies.
-   - **Accessibility:** Make sure the blog is accessible to users with disabilities, adhering to WCAG guidelines.
-
-These enhancements should improve the overall experience without adding too much complexity. How does this sound to you?
-
-
-I already have a template i want to use for the project
-
-
-Continue with email functionality
-
-
-webp file upon upload 
-
-add featured boolean-field to post model
-
-
-
-
 ###########################################
 How do I create better prompts?
 
@@ -118,3 +10,29 @@ Here's an example of a how to create a longer, more descriptive prompt:
 Original prompt: "astronaut"
 Descriptive prompt: "a close-up photo of an astronaut in a glowing suit made of plasma, as if the galaxy is inside of it, putting on their helmet, but you can't see their face because of the visor, realistic, film stock, bright colors"
 
+
+
+TODO!!!!!
+
+Add video field to the model to show social media videos related to the post
+
+Initial display of comments profile pic and posted time.
+
+webp file upon upload 
+
+Authentication pages and static page proper styling. (Accept terms and conditions for registration)
+
+Forgot password functionality for login page.
+
+User Profile:
+   - View user profile
+   - Edit user profile
+   - View posts by specific user
+
+RSS Feed:
+   - Generate RSS feed for latest posts
+
+Basic SEO:
+   - Meta Descriptions: Allow custom meta descriptions for each post.
+   - Open Graph and Twitter Cards: Implement Open Graph and Twitter Cards for better sharing previews on social media.
+   - Generate sitemap: Implement a site map page for all pages and other things needed.

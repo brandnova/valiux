@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from .models import SiteSettings, StaticPage
 from ads.models import Ad
+from posts.models import *
 
 def site_settings(request):
     current_year = datetime.now().year
@@ -30,3 +31,15 @@ def ad_context_processor(request):
     for ad in ads:
         ad_dict[ad.location] = ad
     return {'ads': ad_dict}
+
+def posts_context_processor(request):
+    
+    categories = Category.objects.all()
+    # genres = Genre.objects.all()
+    recent_posts = Post.objects.filter(status='published').order_by('-created_at')[:5]
+
+    return {
+        'categories' : categories,
+        # 'genres' : genres,
+        'recent_posts' : recent_posts
+    }

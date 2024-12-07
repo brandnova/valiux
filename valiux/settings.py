@@ -20,7 +20,6 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -29,7 +28,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_cleanup.apps.CleanupConfig',
     'django_ckeditor_5',
-    'taggit',
     'accounts',
     'ads',
     'core',
@@ -64,6 +62,7 @@ TEMPLATES = [
                 'core.context_processors.site_settings', 
                 'core.context_processors.static_pages_processor',
                 'core.context_processors.ad_context_processor',
+                'core.context_processors.posts_context_processor',
             ],
         },
     },
