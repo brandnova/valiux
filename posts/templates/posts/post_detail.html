@@ -4,108 +4,31 @@
 {% load custom_filters %}
 {% load static %}
 
-<style>
-    .comments-section {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-    .comment-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #333;
-    }
-    #comment-form textarea {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        resize: vertical;
-    }
-    .comment {
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    .comment-header, .reply-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-    .comment-avatar img, .reply-avatar img {
-        width: 40px;
-        height: 40px;
-        object-fit: cover;
-    }
-    .comment-meta, .reply-meta {
-        margin-left: 1rem;
-    }
-    .comment-author, .reply-author {
-        font-weight: 600;
-        color: #333;
-    }
-    .comment-body, .reply-body {
-        margin-left: 3.5rem;
-    }
-    .comment-actions {
-        margin-left: 3.5rem;
-        margin-top: 0.5rem;
-    }
-    .comment-actions .btn-link {
-        padding: 0;
-        color: #6c757d;
-        text-decoration: none;
-    }
-    .comment-actions .btn-link:hover {
-        color: #007bff;
-    }
-    .reply-form {
-        margin-left: 3.5rem;
-    }
-    .comment-replies {
-        margin-left: 3.5rem;
-        border-left: 2px solid #e0e0e0;
-        padding-left: 1rem;
-    }
-    .reply {
-        margin-bottom: 1rem;
-    }
-    .reply:last-child {
-        margin-bottom: 0;
-    }
-    .reactions .btn {
-        background: none;
-        border: none;
-        margin-right: 10px;
-    }
     
-    .reactions .btn-group {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 20px;
-    }
-    .custom-justify {
-        text-align: justify;
-      }
-</style>
-
-<section class="single-post-content">
-    <div class="container">
-        <div class="row">
+    <section class="single-post-content">
+        <div class="container">
+          <div class="row">
             <div class="col-md-9 post-content" data-aos="fade-up">
                 <div class="single-post">
                     <!-- Post Meta and Title Remain the Same -->
                     <div class="post-meta">
                         <span class="date">{{ post.category.name }}</span> 
                         <span class="mx-1">&bullet;</span> 
-                        <span>{{ post.published_date|date:"M jS 'y" }}</span> 
+                        <span>{{ post.created_at|date:"M jS 'y" }}</span> 
                         <span class="mx-1">&bullet;</span> 
                         <span>{{ post.author.first_name }} {{ post.author.last_name }}</span>
                         <span class="mx-1">&bullet;</span>
                         <span><i class="bi bi-eye-fill"></i> {{ post.views }} Views</span>
+                        
+                        <br> {% for gn in post.genres.all %} {% if forloop.first %} &bullet; {% endif %} <span class="">{{ gn.name }}</span> {% if not forloop.last %}, {% endif %} {% endfor %}
+                        <hr>
                     </div>
 
                     <h1 class="mb-5">{{ post.title }}</h1>
 
-                    <p>{{ post.excerpt }}</p>
+                    {% with post.excerpt|safe|highlight_first_char as highlighted_text %}
+                        <div class="mb-5">{{ highlighted_text|safe }}</div>
+                    {% endwith %}
 
                     {% if post.image %}
                     <figure class="my-4 position-relative" style="padding-top: 57.1%;">
@@ -113,534 +36,492 @@
                             src="{{ post.image.url }}" 
                             alt="{{ post.title }} display image" 
                             class="position-absolute top-0 pe-5 start-0 w-100 h-100 object-fit-cover rounded"
+                            style="border-radius: 30px;"
                         >
                     </figure>
                     {% endif %}
 
-                    <div class="blog-post-content fs-4 lh-lg custom-justify">
-                        {{ post.content|safe }}
-                    </div>
+                    <p>{{ post.content|safe }}</p>
 
-                    <!-- Reactions Section with Font Awesome Icons -->
-                    <div class="reactions text-center my-4">
-                        <div class="btn-group" role="group" aria-label="Post Reactions">
-                            {% for reaction_type, reaction_label in post.reactions.model.REACTION_CHOICES %}
-                            <button 
-                                type="button"
-                                class="btn reaction-btn fs-5 {% if user_reaction and user_reaction.reaction_type == reaction_type %}active{% endif %}"
-                                data-reaction="{{ reaction_type }}"
-                                data-slug="{{ post.slug }}"
-                            >
-                                {% if reaction_type == 'like' %}
-                                    <i class="far fa-thumbs-up"></i>
-                                {% elif reaction_type == 'love' %}
-                                    <i class="far fa-heart"></i>
-                                {% elif reaction_type == 'laugh' %}
-                                    <i class="far fa-laugh"></i>
-                                {% elif reaction_type == 'surprise' %}
-                                    <i class="far fa-surprise"></i>
-                                {% elif reaction_type == 'sad' %}
-                                    <i class="far fa-sad-tear"></i>
-                                {% elif reaction_type == 'dislike' %}
-                                    <i class="far fa-thumbs-down"></i>
-                                {% endif %}
-                                <span class="reaction-count" data-count-type="{{ reaction_type }}">
-                                    {{ reaction_counts|get_item:reaction_type }}
-                                </span>
-                            </button>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- Bookmark Button -->
-                    <div class="bookmark my-5">
-                        <button class="btn btn-outline-secondary bookmark-btn" 
-                                data-slug="{{ post.slug }}">
-                            <i class="bi bi-bookmark{% if not user.is_authenticated or not post.bookmarked_by.exists %}-plus{% endif %}"></i>
-                            Bookmark 
-                            (<span class="bookmark-count">{{ post.bookmarked_by.count }}</span>)
-                        </button>
-                    </div>
-
-                    <!-- Comments Section -->
-                    <div class="comments-section mt-5">
-                        <h5 class="comment-title py-4">Comments (<span id="comment-count">{{ comments.count }}</span>)</h5>
-                        {% if post.allow_comments and user.is_authenticated %}
-                        <div class="comments-section mt-5">
-                            
-                            <!-- Main Comment Form -->
-                            <form id="comment-form" class="mb-4">
-                                {% csrf_token %}
-                                <div class="form-floating mb-3">
-                                    <textarea class="form-control" placeholder="Leave a comment" 
-                                            id="comment-input" 
-                                            name="comment" 
-                                            required></textarea>
-                                    <label for="comment-input">Your Comment</label>
-                                    <input type="hidden" id="parent-comment-id" name="parent_id" value="">
-                                </div>
-                                <button type="submit" class="btn btn-primary">Post Comment</button>
-                            </form>
-
-                            
-                        </div>
-                        {% elif not user.is_authenticated %}
-                        <div class="alert alert-info mt-4">
-                            Please <a href="{% url 'login' %}">log in</a> to leave a comment.
-                        </div>
-                        {% endif %}
-
-                        <!-- Comments List -->
-                        <div id="comments-list">
-                            {% for comment in comments %}
-                            <div class="comment" data-comment-id="{{ comment.id }}">
-                                <div class="comment-header">
-                                    {% comment %} <div class="comment-avatar">
-                                        <img src="{{ comment.user.profile.avatar.url|default:'/static/assets/img/default-avatar.jpg' }}" alt="{{ comment.name }}" class="rounded-circle">
-                                    </div> {% endcomment %}
-                                    <div class="comment-meta">
-                                        <h6 class="comment-author mb-0">{{ comment.name }}</h6>
-                                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
-                                    </div>
-                                </div>
-                                <div class="comment-body">
-                                    <p>{{ comment.comment }}</p>
-                                </div>
-                                <div class="comment-actions">
-                                    <button class="btn btn-sm btn-link reply-btn me-4" data-parent-id="{{ comment.id }}">
-                                        Reply
-                                    </button>
-                                    {% if comment.replies.all %}
-                                    <button class="btn btn-sm btn-link show-replies-btn">
-                                        {{ comment.replies.count }} Replies <i class="bi bi-chevron-down mt-1"></i>
-                                    </button>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Reply Form -->
-                                <form class="reply-form mt-3" style="display: none;">
-                                    {% csrf_token %}
-                                    <div class="form-group">
-                                        <textarea class="form-control" placeholder="Write a reply" rows="2" required></textarea>
-                                    </div>
-                                    <div class="mt-2">
-                                        <button type="submit" class="btn btn-sm btn-primary">Post Reply</button>
-                                        <button type="button" class="btn btn-sm btn-secondary cancel-reply">Cancel</button>
-                                    </div>
-                                </form>
-
-                                <!-- Replies Container -->
-                                {% if comment.replies.all %}
-                                <div class="comment-replies mt-3" style="display: none;">
-                                    {% for reply in comment.replies.all %}
-                                    <div class="reply">
-                                        <div class="reply-header">
-                                            {% comment %} <div class="reply-avatar">
-                                                <img src="{{ comment.user.profile.avatar.url|default:'/static/assets/img/default-avatar.jpg' }}" class="rounded-circle">
-                                            </div> {% endcomment %}
-                                            <div class="reply-meta">
-                                                <h6 class="reply-author mb-0">{{ reply.name }}</h6>
-                                                <small class="text-muted">{{ reply.created_at|timesince }} ago</small>
-                                            </div>
-                                        </div>
-                                        <div class="reply-body">
-                                            <p>{{ reply.comment }}</p>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    
                 </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const slug = '{{ post.slug }}';
-
-        // Utility Functions
-        function showAlert(message, type = 'info') {
-            const alertContainer = document.createElement('div');
-            alertContainer.className = `alert alert-${type} fixed-top text-center`;
-            alertContainer.style.zIndex = '1050';
-            alertContainer.textContent = message;
-            document.body.insertBefore(alertContainer, document.body.firstChild);
-            
-            setTimeout(() => {
-                alertContainer.remove();
-            }, 3000);
-        }
-
-        function getIconClasses(reactionType, isSolid = false) {
-            const iconMap = {
-                'like': ['fa-thumbs-up', '#4267B2'],
-                'love': ['fa-heart', '#ED4956'],
-                'laugh': ['fa-laugh', '#FFD700'],
-                'surprise': ['fa-surprise', '#FF8C00'],
-                'sad': ['fa-sad-tear', '#1DA1F2'],
-                'dislike': ['fa-thumbs-down', '#FF4500']
-            };
-            
-            const [iconName, color] = iconMap[reactionType] || ['fa-smile', '#000000'];
-            const prefix = isSolid ? 'fas' : 'far';
-            return { classes: `${prefix} ${iconName}`, color };
-        }
-
-        function updateReactionIcon(btn, reactionType, isActive) {
-            const icon = btn.querySelector('i');
-            const { classes, color } = getIconClasses(reactionType, isActive);
-            
-            icon.className = classes;
-            btn.style.color = isActive ? color : '';
-            btn.classList.toggle('active', isActive);
-        }
-
-        // Persistent Reaction State
-        function saveUserReaction(reactionType) {
-            localStorage.setItem(`post_reaction_${slug}`, reactionType);
-        }
-
-        function clearUserReaction() {
-            localStorage.removeItem(`post_reaction_${slug}`);
-        }
-
-        function restoreUserReaction() {
-            const savedReaction = localStorage.getItem(`post_reaction_${slug}`);
-            if (savedReaction) {
-                const btn = document.querySelector(`.reaction-btn[data-reaction="${savedReaction}"]`);
-                if (btn) {
-                    updateReactionIcon(btn, savedReaction, true);
-                }
-            }
-        }
-        
-        // Reaction Handler
-        function setupReactionHandlers() {
-            // Restore previous reaction on page load
-            restoreUserReaction();
-
-            document.querySelectorAll('.reaction-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    if (!{{ user.is_authenticated|yesno:"true,false" }}) {
-                        showAlert('Please log in to react to this post.', 'warning');
-                        return;
-                    }
-
-                    const reactionType = this.dataset.reaction;
-                    fetch(`/posts/${slug}/react/${reactionType}/`, {
-                        method: 'GET',
-                        headers: {
-                            'X-CSRFToken': csrfToken,
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(errorData => {
-                                throw new Error(errorData.message || 'Network error');
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.status === 'error') {
-                            throw new Error(data.message || 'Reaction processing failed');
-                        }
-                    
-                        // Update reaction counts
-                        Object.keys(data.reaction_counts).forEach(rt => {
-                            const countEl = document.querySelector(`[data-count-type="${rt}"]`);
-                            if (countEl) countEl.textContent = data.reaction_counts[rt];
-                        });
-                    
-                        // Toggle active state and icon styles
-                        document.querySelectorAll('.reaction-btn').forEach(b => {
-                            updateReactionIcon(b, b.dataset.reaction, false);
-                        });
-                    
-                        if (data.status !== 'removed') {
-                            updateReactionIcon(this, reactionType, true);
-                            saveUserReaction(reactionType);
-                        } else {
-                            clearUserReaction();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showAlert(error.message || 'Failed to process reaction. Please try again.', 'danger');
-                    });
-                });
-            });
-        }
-
-        // Bookmark Handler
-        function setupBookmarkHandler() {
-            const bookmarkBtn = document.querySelector('.bookmark-btn');
-            if (bookmarkBtn) {
-                bookmarkBtn.addEventListener('click', function() {
-                    if (!{{ user.is_authenticated|yesno:"true,false" }}) {
-                        showAlert('Please log in to bookmark this post.', 'warning');
-                        return;
-                    }
-
-                    fetch(`/posts/${slug}/bookmark/`, {
-                        method: 'GET',
-                        headers: {
-                            'X-CSRFToken': csrfToken,
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        const bookmarkIcon = this.querySelector('i');
-                        const bookmarkCount = this.querySelector('.bookmark-count');
-                        
-                        if (data.status === 'added') {
-                            bookmarkIcon.classList.remove('bi-bookmark-plus');
-                            bookmarkIcon.classList.add('bi-bookmark-fill');
-                        } else {
-                            bookmarkIcon.classList.remove('bi-bookmark-fill');
-                            bookmarkIcon.classList.add('bi-bookmark-plus');
-                        }
-                        bookmarkCount.textContent = data.bookmark_count;
-                    })
-                    .catch(error => {
-                        showAlert('Failed to bookmark post. Please try again.', 'danger');
-                    });
-                });
-            }
-        }
-
-        // Comment Submission Handler
-        function setupCommentSubmission() {
-            const commentForm = document.getElementById('comment-form');
-            if (commentForm) {
-                commentForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    if (!{{ user.is_authenticated|yesno:"true,false" }}) {
-                        showAlert('Please log in to comment.', 'warning');
-                        return;
-                    }
-
-                    const formData = new FormData(this);
-                    fetch(`/posts/${slug}/comment/add/`, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRFToken': csrfToken
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            const commentsList = document.getElementById('comments-list');
-                            const newComment = createCommentElement(data.comment);
-                            commentsList.insertBefore(newComment, commentsList.firstChild);
-
-                            // Reset form
-                            this.reset();
-
-                            // Update comment count
-                            const commentCount = document.getElementById('comment-count');
-                            commentCount.textContent = parseInt(commentCount.textContent) + 1;
-
-                            showAlert('Comment posted successfully!', 'success');
-                        } else {
-                            showAlert('Failed to post comment. Please try again.', 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showAlert('Failed to post comment. Please try again.', 'danger');
-                    });
-                });
-            }
-        }
-
-        // Create Comment Element
-        function createCommentElement(commentData) {
-            const commentEl = document.createElement('div');
-            commentEl.className = 'comment';
-            commentEl.dataset.commentId = commentData.id;
-            
-            commentEl.innerHTML = `
-                <div class="comment-header">
-                    {% comment %} <div class="comment-avatar">
-                        <img src="{{ comment.user.profile.avatar.url|default:'/static/assets/img/default-avatar.jpg' }}" alt="${commentData.name}" class="rounded-circle">
-                    </div> {% endcomment %}
-                    <div class="comment-meta">
-                        <h6 class="comment-author mb-0">${commentData.name}</h6>
-                        <small class="text-muted">just now</small>
-                    </div>
+                
+                <!-- Reactions Section -->
+                <div class="reactions mt-4">
+                    <h5>Reactions</h5>
+                    <div class="reaction-buttons d-flex justify-content-start">
+                      {% for reaction_type, reaction_label in post.reactions.model.REACTION_CHOICES %}
+                      <button 
+                          class="btn btn-reaction me-2 {% if user_reaction and user_reaction.reaction_type == reaction_type %}active{% endif %}"
+                          data-reaction="{{ reaction_type }}"
+                      >
+                          {{ reaction_label }} 
+                          ({{ reaction_counts|get_item:reaction_type }})
+                      </button>
+                      {% endfor %}
+                  </div>
                 </div>
-                <div class="comment-body">
-                    <p>${commentData.comment}</p>
-                </div>
-                <div class="comment-actions">
-                    <button class="btn btn-sm btn-link reply-btn" data-parent-id="${commentData.id}">
-                        Reply
+                
+                <!-- Bookmark Button -->
+                <div class="bookmark mt-3">
+                    <button class="btn btn-outline-primary bookmark-toggle">
+                        Bookmark 
+                        ({{ post.bookmarked_by.count }})
                     </button>
                 </div>
-                <form class="reply-form mt-3" style="display: none;">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <textarea class="form-control" placeholder="Write a reply" rows="2" required></textarea>
+
+                <!-- Comments Form -->
+                {% if user.is_authenticated and post.allow_comments %}
+                    <div class="row justify-content-center mt-5">
+                        <div class="col-lg-12">
+                            <h5 class="comment-title">Leave a Comment</h5>
+                            <form id="main-comment-form" method="post" data-post-slug="{{ post.slug }}" 
+                                action="{% url 'add_comment' post.slug %}">
+                                {% csrf_token %}
+                                {{ comment_form.comment }}
+                                <input type="submit" class="btn btn-primary mt-2" value="Post comment">
+                            </form>
+                        </div>
                     </div>
-                    <div class="mt-2">
-                        <button type="submit" class="btn btn-sm btn-primary">Post Reply</button>
-                        <button type="button" class="btn btn-sm btn-secondary cancel-reply">Cancel</button>
+                {% elif not user.is_authenticated %}
+                    <div class="alert alert-info mt-5">
+                        Please <a href="{% url 'login' %}" style="text-decoration: underline;">log in</a> to leave a comment.
                     </div>
-                </form>
-            `;
-
-            return commentEl;
-        }
-
-        // Comments and Replies Interaction
-        function setupCommentInteractions() {
-            document.getElementById('comments-list').addEventListener('click', function(e) {
-                // Show/Hide Replies
-                if (e.target.classList.contains('show-replies-btn')) {
-                    const repliesContainer = e.target.closest('.comment').querySelector('.comment-replies');
-                    if (repliesContainer) {
-                        const isHidden = repliesContainer.style.display === 'none';
-                        repliesContainer.style.display = isHidden ? 'block' : 'none';
-                        e.target.innerHTML = isHidden 
-                            ? `Hide Replies <i class="bi bi-chevron-up"></i>` 
-                            : `${repliesContainer.children.length} Replies <i class="bi bi-chevron-down"></i>`;
-                    }
-                }
-
-                // Show Reply Form
-                if (e.target.classList.contains('reply-btn')) {
-                    const comment = e.target.closest('.comment');
-                    const replyForm = comment.querySelector('.reply-form');
-                    replyForm.style.display = 'block';
-                }
-
-                // Cancel Reply
-                if (e.target.classList.contains('cancel-reply')) {
-                    const replyForm = e.target.closest('.reply-form');
-                    replyForm.style.display = 'none';
-                }
-            });
-
-            // Reply Submission
-            document.getElementById('comments-list').addEventListener('submit', function(e) {
-                if (e.target.classList.contains('reply-form')) {
-                    e.preventDefault();
+                {% endif %}
+  
                     
-                    if (!{{ user.is_authenticated|yesno:"true,false" }}) {
-                        showAlert('Please log in to reply.', 'warning');
-                        return;
-                    }
-
-                    const replyForm = e.target;
-                    const textarea = replyForm.querySelector('textarea');
-                    const parentId = replyForm.closest('.comment').dataset.commentId;
-                    const formData = new FormData();
+                <!-- ======= Comments ======= -->
+                <div class="comments mt-5" id="comments-section">
+                    <h5 class="comment-title py-4" id="comments-count">{{ comments.count }} Comments</h5>
                     
-                    formData.append('comment', textarea.value);
-                    formData.append('parent_id', parentId);
-                    formData.append('csrfmiddlewaretoken', csrfToken);
-
-                    fetch(`/posts/${slug}/comment/add/`, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            const parentComment = document.querySelector(`[data-comment-id="${parentId}"]`);
-                            const newReply = createReplyElement(data.comment);
-                            
-                            let repliesContainer = parentComment.querySelector('.comment-replies');
-                            if (!repliesContainer) {
-                                repliesContainer = document.createElement('div');
-                                repliesContainer.className = 'comment-replies mt-3';
-                                parentComment.appendChild(repliesContainer);
-                            }
-                            
-                            repliesContainer.appendChild(newReply);
-                            repliesContainer.style.display = 'block';
-                            
-                            // Reset and hide reply form
-                            textarea.value = '';
-                            replyForm.style.display = 'none';
-
-                            // Update replies count button
-                            updateRepliesCountButton(parentComment);
-
-                            showAlert('Reply posted successfully!', 'success');
-                        } else {
-                            showAlert('Failed to post reply. Please try again.', 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showAlert('Failed to post reply. Please try again.', 'danger');
-                    });
-                }
-            });
-        }
-
-        // Create Reply Element
-        function createReplyElement(replyData) {
-            const replyEl = document.createElement('div');
-            replyEl.className = 'reply';
-            
-            replyEl.innerHTML = `
-                <div class="reply-header">
-                    {% comment %} <div class="reply-avatar">
-                        <img src="{{ comment.user.profile.avatar.url|default:'/static/assets/img/default-avatar.jpg' }}" alt="${replyData.name}" class="rounded-circle">
-                    </div> {% endcomment %}
-                    <div class="reply-meta">
-                        <h6 class="reply-author mb-0">${replyData.name}</h6>
-                        <small class="text-muted">just now</small>
+                    <div id="comments-container">
+                        {% for comment in comments %}
+                        <div class="comment d-flex mb-4" id="comment-{{ comment.id }}">
+                            <!-- Existing comment rendering code -->
+                            <div class="flex-shrink-0">
+                                <div class="avatar avatar-sm rounded-circle">
+                                    <img class="avatar-img" src="{{ comment.user.profile.avatar.url }}" alt="{{ comment.user.first_name }} {{ comment.user.last_name }}">
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-2 ms-sm-3">
+                                <div class="comment-meta d-flex align-items-baseline">
+                                    <h6 class="me-2">{{ comment.user.first_name }} {{ comment.user.last_name }}</h6>
+                                    <span class="text-muted">{{ comment.created_at|timesince }} ago</span>
+                                </div>
+                                <div class="comment-body">
+                                    {{ comment.comment }}
+                                </div>
+                
+                                <!-- Reply Button -->
+                                <button class="btn btn-sm btn-outline-secondary reply-toggle mt-2" 
+                                        data-comment-id="{{ comment.id }}">
+                                    Reply
+                                </button>
+                
+                                <!-- Reply Form -->
+                                <form method="post" class="reply-form mt-2" 
+                                    data-post-slug="{{ post.slug }}"
+                                    id="reply-form-{{ comment.id }}" 
+                                    style="display:none;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                                    <div class="form-group">
+                                        <textarea name="comment" class="form-control" 
+                                                placeholder="Write your reply" 
+                                                required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-2">Post Reply</button>
+                                    <button type="button" class="btn btn-secondary mt-2 ml-2 cancel-reply">Cancel</button>
+                                </form>
+                
+                                <!-- Replies Container -->
+                                <div class="comment-replies-container" id="replies-container-{{ comment.id }}">
+                                    {% if comment.replies.all %}
+                                    <div class="comment-replies bg-light p-3 mt-3 rounded">
+                                        <h6 class="comment-replies-title mb-4 text-muted text-uppercase">
+                                            {{ comment.replies.count }} Replies
+                                        </h6>
+                
+                                        {% for reply in comment.replies.all %}
+                                        <div class="reply d-flex mb-3" id="reply-{{ reply.id }}">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-sm rounded-circle">
+                                                    <img class="avatar-img" src="{{ reply.user.profile.avatar.url }}" alt="{{ reply.user.first_name }} {{ reply.user.last_name }}">
+                                                    {% comment %} <img class="avatar-img" src="{% static 'assets/img/default-avatar.jpg' %}" alt="{{ reply.user.username }}"> {% endcomment %}
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-2 ms-sm-3">
+                                                <div class="reply-meta d-flex align-items-baseline">
+                                                    <h6 class="mb-0 me-2">{{ reply.user.first_name }} {{ reply.user.last_name }}</h6>
+                                                    <span class="text-muted">{{ reply.created_at|timesince }} ago</span>
+                                                </div>
+                                                <div class="reply-body">
+                                                    {{ reply.comment }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-                <div class="reply-body">
-                    <p>${replyData.comment}</p>
-                </div>
-            `;
 
-            return replyEl;
-        }
-
-        // Update Replies Count Button
-        function updateRepliesCountButton(parentComment) {
-            const repliesContainer = parentComment.querySelector('.comment-replies');
-            let repliesCountBtn = parentComment.querySelector('.show-replies-btn');
+              
+            </div>
             
-            if (repliesContainer) {
-                const replyCount = repliesContainer.children.length;
-                
-                if (!repliesCountBtn) {
-                    repliesCountBtn = document.createElement('button');
-                    repliesCountBtn.className = 'btn btn-sm btn-link show-replies-btn';
-                    parentComment.querySelector('.comment-actions').appendChild(repliesCountBtn);
-                }
-                
-                repliesCountBtn.textContent = `${replyCount} ${replyCount === 1 ? 'Reply' : 'Replies'}`;
+            <!-- Sidebar content remains the same -->
+            <div class="col-md-3">
+                <!-- ======= Sidebar ======= -->
+                <div class="aside-block">
+  
+                  <ul class="nav nav-pills custom-tab-nav mb-4" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link active" id="pills-popular-tab" data-bs-toggle="pill" data-bs-target="#pills-popular" type="button" role="tab" aria-controls="pills-popular" aria-selected="true">Popular</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link" id="pills-trending-tab" data-bs-toggle="pill" data-bs-target="#pills-trending" type="button" role="tab" aria-controls="pills-trending" aria-selected="false">Trending</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link" id="pills-latest-tab" data-bs-toggle="pill" data-bs-target="#pills-latest" type="button" role="tab" aria-controls="pills-latest" aria-selected="false">Latest</button>
+                    </li>
+                  </ul>
+  
+                  <div class="tab-content" id="pills-tabContent">
+  
+                    <!-- Popular -->
+                    <div class="tab-pane fade show active" id="pills-popular" role="tabpanel" aria-labelledby="pills-popular-tab">
+                      {% for post in popular_posts %}
+                          <div class="post-entry-1 border-bottom">
+                            <div class="post-meta">
+                                <span class="date">{{ post.category.name }}</span> 
+                                <span class="mx-1">&bullet;</span> 
+                                <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                            </div>
+                            <h2 class="mb-2">
+                                <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
+                            </h2>
+                            <span class="author mb-3 d-block">{{ post.author.first_name }} {{ post.author.last_name }}</span>
+                          </div>
+                      {% empty %}
+                          <p>No popular posts available.</p>
+                      {% endfor %}
+                    </div> <!-- End Popular -->
+  
+                    <!-- Trending -->
+                    <div class="tab-pane fade" id="pills-trending" role="tabpanel" aria-labelledby="pills-trending-tab">
+                      {% for post in trending_posts %}
+                          <div class="post-entry-1 border-bottom">
+                            <div class="post-meta">
+                                <span class="date">{{ post.category.name }}</span> 
+                                <span class="mx-1">&bullet;</span> 
+                                <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                            </div>
+                            <h2 class="mb-2">
+                                <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
+                            </h2>
+                            <span class="author mb-3 d-block">{{ post.author.first_name }} {{ post.author.last_name }}</span>
+                          </div>
+                      {% empty %}
+                          <p>No trending posts available.</p>
+                      {% endfor %}
+                    </div> <!-- End Trending -->
+  
+                    <!-- Latest -->
+                    <div class="tab-pane fade" id="pills-latest" role="tabpanel" aria-labelledby="pills-latest-tab">
+                      {% for post in latest_posts %}
+                          <div class="post-entry-1 border-bottom">
+                            <div class="post-meta">
+                                <span class="date">{{ post.category.name }}</span> 
+                                <span class="mx-1">&bullet;</span> 
+                                <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                            </div>
+                            <h2 class="mb-2">
+                                <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
+                            </h2>
+                            <span class="author mb-3 d-block">{{ post.author.first_name }} {{ post.author.last_name }}</span>
+                          </div>
+                      {% empty %}
+                          <p>No latest posts available.</p>
+                      {% endfor %}
+                    </div> <!-- End Latest -->
+  
+                  </div>
+                </div>
+
+                {% comment %} <div class="aside-block">
+                  <h3 class="aside-title">Video</h3>
+                  <div class="video-post">
+                    <a href="https://www.youtube.com/watch?v=AiFfDjmd0jU" class="glightbox link-video">
+                      <span class="bi-play-fill"></span>
+                      <img src="assets/img/post-landscape-5.jpg" alt="" class="img-fluid">
+                    </a>
+                  </div>
+                </div><!-- End Video --> {% endcomment %}
+  
+                <div class="aside-block">
+                  <h3 class="aside-title">Categories</h3>
+                  <ul class="aside-links list-unstyled">
+                    {% for category in categories %}
+                        <li>
+                            <a href="{% url 'post_list' %}?category={{ category.slug }}" 
+                              class="{% if current_category == category.slug %}active{% endif %}">
+                                <i class="bi bi-chevron-right"></i> {{ category.name }}
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li>No categories available.</li>
+                    {% endfor %}
+                  </ul>
+                </div><!-- End Categories -->
+  
+                <div class="aside-block">
+                  <h3 class="aside-title">Genre</h3>
+                  <ul class="aside-tags list-unstyled">
+                    {% for genre in genres %}
+                        <li><a href="{% url 'post_list' %}?genre={{ genre.slug }}">{{ genre.name }}</a></li>
+                    {% empty %}
+                        <li>No genres available.</li>
+                    {% endfor %}
+                  </ul>
+                </div><!-- End Genre -->
+  
+              </div>
+          </div>
+        </div>
+    </section>
+
+    <!-- Dynamic Comments JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Utility function for human-readable timestamps
+            function timeAgo(dateString) {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - date) / 1000);
+        
+                if (diffInSeconds < 60) return 'Just now';
+                if (diffInSeconds < 120) return '1 minute ago';
+                if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+                if (diffInSeconds < 7200) return '1 hour ago';
+                if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+                if (diffInSeconds < 172800) return '1 day ago';
+                return `${Math.floor(diffInSeconds / 86400)} days ago`;
             }
-        }
+        
+            // Main comment form submission
+            const mainCommentForm = document.getElementById('main-comment-form');
+            if (mainCommentForm) {
+                mainCommentForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitComment(this, null);
+                });
+            }
+        
+            // Reply form toggles
+            function setupReplyToggles() {
+                const replyToggles = document.querySelectorAll('.reply-toggle');
+                replyToggles.forEach(toggle => {
+                    toggle.innerHTML = `<i class="bi bi-chat-left-text"></i> Reply`;
+                    toggle.addEventListener('click', function() {
+                        const commentId = this.getAttribute('data-comment-id');
+                        const replyForm = document.getElementById(`reply-form-${commentId}`);
+                        const repliesContainer = replyForm.closest('.flex-grow-1').querySelector('.comment-replies-container');
+                        
+                        // Toggle form visibility
+                        replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+                        
+                        // Focus on textarea when opened
+                        if (replyForm.style.display === 'block') {
+                            replyForm.querySelector('textarea').focus();
+                        }
+                    });
+                });
+            }
+        
+            // Cancel reply buttons
+            function setupCancelReplyButtons() {
+                const cancelReplyButtons = document.querySelectorAll('.cancel-reply');
+                cancelReplyButtons.forEach(button => {
+                    button.innerHTML = `<i class="bi bi-x-circle"></i> Cancel`;
+                    button.addEventListener('click', function() {
+                        const replyForm = this.closest('.reply-form');
+                        replyForm.style.display = 'none';
+                    });
+                });
+            }
+        
+            // Reply form submissions
+            function setupReplyFormSubmissions() {
+                const replyForms = document.querySelectorAll('.reply-form');
+                replyForms.forEach(form => {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const parentId = this.querySelector('input[name="parent_id"]').value;
+                        submitComment(this, parentId);
+                    });
+                });
+            }
+        
+            function submitComment(form, parentId) {
+                const commentTextarea = form.querySelector('textarea[name="comment"]');
+                const commentText = commentTextarea.value.trim();
+                const postSlug = form.getAttribute('data-post-slug');
+        
+                if (!commentText) {
+                    alert('Please enter a comment');
+                    return;
+                }
+        
+                const formData = new FormData();
+                formData.append('comment', commentText);
+                if (parentId) {
+                    formData.append('parent_id', parentId);
+                }
+        
+                fetch(`/posts/${postSlug}/comment/add/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const comment = data.comment;
+                        
+                        // Clear the textarea
+                        commentTextarea.value = '';
+        
+                        // Update comments count
+                        const commentsCountEl = document.getElementById('comments-count');
+                        const currentCount = parseInt(commentsCountEl.textContent);
+                        commentsCountEl.textContent = `${currentCount + 1} Comments`;
+        
+                        // Create comment HTML
+                        if (comment.parent_id) {
+                            // It's a reply
+                            const repliesContainer = document.getElementById(`replies-container-${comment.parent_id}`);
+                            
+                            // Check if replies container exists, if not create it
+                            if (!repliesContainer) {
+                                const commentEl = document.getElementById(`comment-${comment.parent_id}`);
+                                const newRepliesContainer = document.createElement('div');
+                                newRepliesContainer.id = `replies-container-${comment.parent_id}`;
+                                newRepliesContainer.className = 'comment-replies-container';
+                                commentEl.querySelector('.flex-grow-1').appendChild(newRepliesContainer);
+                            }
+        
+                            // Create replies container if not exists
+                            if (repliesContainer.querySelector('.comment-replies') === null) {
+                                const repliesWrapper = document.createElement('div');
+                                repliesWrapper.className = 'comment-replies bg-light p-3 mt-3 rounded';
+                                repliesWrapper.innerHTML = `
+                                    <h6 class="comment-replies-title mb-4 text-muted text-uppercase">
+                                        1 Reply
+                                    </h6>
+                                `;
+                                repliesContainer.appendChild(repliesWrapper);
+                            }
+        
+                            const repliesTitle = repliesContainer.querySelector('.comment-replies-title');
+                            if (repliesTitle) {
+                                const currentReplyText = repliesTitle.textContent.trim();
+                                const currentReplyCount = currentReplyText.split(' ')[0] === 'Replies' ? 0 : parseInt(currentReplyText);
+                                repliesTitle.textContent = `${currentReplyCount + 1} ${currentReplyCount + 1 === 1 ? 'Reply' : 'Replies'}`;
+                            }
+        
+                            const replyHTML = `
+                                <div class="reply d-flex mb-3" id="reply-${comment.id}">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar avatar-sm rounded-circle">
+                                            <img class="avatar-img" src="{% static 'assets/img/default-avatar.jpg' %}" alt="${comment.username}">
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-2 ms-sm-3">
+                                        <div class="reply-meta d-flex align-items-baseline">
+                                            <h6 class="mb-0 me-2">${comment.username}</h6>
+                                            <span class="text-muted">${timeAgo(comment.created_at)}</span>
+                                        </div>
+                                        <div class="reply-body">
+                                            ${comment.comment}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            repliesContainer.querySelector('.comment-replies').insertAdjacentHTML('beforeend', replyHTML);
+                            
+                            // Hide reply form
+                            const replyForm = document.getElementById(`reply-form-${comment.parent_id}`);
+                            if (replyForm) replyForm.style.display = 'none';
+                        } else {
+                            // Top-level comment
+                            const commentHTML = `
+                                <div class="comment d-flex mb-4" id="comment-${comment.id}">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar avatar-sm rounded-circle">
+                                            <img class="avatar-img" src="{% static 'assets/img/default-avatar.jpg' %}" alt="${comment.username}">
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-2 ms-sm-3">
+                                        <div class="comment-meta d-flex align-items-baseline">
+                                            <h6 class="me-2">${comment.username}</h6>
+                                            <span class="text-muted">${timeAgo(comment.created_at)}</span>
+                                        </div>
+                                        <div class="comment-body">
+                                            ${comment.comment}
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-secondary reply-toggle mt-2" 
+                                                data-comment-id="${comment.id}">
+                                            <i class="bi bi-chat-left-text"></i> Reply
+                                        </button>
+                                        <form method="post" class="reply-form mt-2" 
+                                            data-post-slug="{{ post.slug }}"
+                                            id="reply-form-${comment.id}" 
+                                            style="display:none;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="parent_id" value="${comment.id}">
+                                            <div class="form-group">
+                                                <textarea name="comment" class="form-control" 
+                                                        placeholder="Write your reply" 
+                                                        required></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary mt-2">Post Reply</button>
+                                            <button type="button" class="btn btn-secondary mt-2 ml-2 cancel-reply">
+                                                <i class="bi bi-x-circle"></i> Cancel
+                                            </button>
+                                        </form>
+                                        <div class="comment-replies-container" id="replies-container-${comment.id}"></div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            document.getElementById('comments-container').insertAdjacentHTML('afterbegin', commentHTML);
+                            
+                            // Re-attach event listeners
+                            setupReplyToggles();
+                            setupCancelReplyButtons();
+                            setupReplyFormSubmissions();
+                        }
+                    } else {
+                        alert('An error occurred while submitting the comment');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while submitting the comment');
+                });
+            }
+        
+            // Initial setup
+            setupReplyToggles();
+            setupCancelReplyButtons();
+            setupReplyFormSubmissions();
+        });
+    </script>
     
-        // Initialize all interaction handlers
-        setupReactionHandlers();
-        setupBookmarkHandler();
-        setupCommentSubmission();
-        setupCommentInteractions();
-    });
-</script>
-
 {% endblock %}

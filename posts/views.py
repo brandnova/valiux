@@ -1,9 +1,14 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpRequest
 from django.utils.timezone import now
-from django.db.models import Count
-from .models import Post, Comment, Reaction, Bookmark
+from django.db.models import Q
+from .models import  Post, Category, Genre, Comment, Reaction, Bookmark
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_client_ip(request: HttpRequest):
     """Helper function to get the client's IP address."""
@@ -15,14 +20,70 @@ def get_client_ip(request: HttpRequest):
     return ip
 
 def post_list(request):
+    # Initial queryset of published posts
     posts = Post.objects.filter(status='published').order_by('-published_date')
+
+    # Fetch all categories and genres
+    categories = Category.objects.all()
+    genres = Genre.objects.all()
+
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        posts = posts.filter(
+            Q(title__icontains=search_query) | Q(content__icontains=search_query) | Q(excerpt__icontains=search_query)
+        )
+
+    # Filtering by multiple categories
+    category_slugs = request.GET.getlist('category')
+    if category_slugs:
+        posts = posts.filter(category__slug__in=category_slugs)
+
+    # Filtering by multiple genres
+    genre_slugs = request.GET.getlist('genre')
+    if genre_slugs:
+        posts = posts.filter(genres__slug__in=genre_slugs)
+
+    # Pagination
+    paginator = Paginator(posts, 10)  # Show 10 posts per page
+    page = request.GET.get('page', 1)
+
+    try:
+        posts = paginator.page(page)
+    except PageNotAnInteger:
+        posts = paginator.page(1)
+    except EmptyPage:
+        posts = paginator.page(paginator.num_pages)
+
+    # Fetch posts for sidebar tabs based on tags
+    popular_posts = Post.objects.filter(status='published', tag='popular').order_by('?')[:5]
+    trending_posts = Post.objects.filter(status='published', tag='trending').order_by('?')[:5]
+    latest_posts = Post.objects.filter(status='published', tag='latest').order_by('?')[:5]
+
     context = {
-        'posts': posts
+        'posts': posts,
+        'categories': categories,
+        'genres': genres,
+        'popular_posts': popular_posts,
+        'trending_posts': trending_posts,
+        'latest_posts': latest_posts,
+        'current_category': category_slugs,
+        'current_genre': genre_slugs,
+        'search_query': search_query,
     }
     return render(request, 'posts/post_list.html', context)
 
+
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug, status='published')
+    genres = Genre.objects.all()
+    categories = Category.objects.all()
+
+    # Fetch posts for sidebar tabs based on tags
+    popular_posts = Post.objects.filter(status='published', tag='popular').order_by('?')[:5]
+    trending_posts = Post.objects.filter(status='published', tag='trending').order_by('?')[:5]
+    latest_posts = Post.objects.filter(status='published', tag='latest').order_by('?')[:5]
+
 
     # Track unique views using IP address
     client_ip = get_client_ip(request)
@@ -51,50 +112,77 @@ def post_detail(request, slug):
         except Reaction.DoesNotExist:
             pass
 
+    from .forms import CommentForm
+    comment_form = CommentForm()
+
     # Context for the template
     context = {
         'post': post,
+        'genres': genres,
+        'categories': categories,
+        'popular_posts': popular_posts,
+        'trending_posts': trending_posts,
+        'latest_posts': latest_posts,
         'comments': comments,
+        'comment_form': comment_form,
         'user_reaction': user_reaction,
         'reaction_counts': reaction_counts
     }
     return render(request, 'posts/post_detail.html', context)
 
 @login_required
+@csrf_exempt  # Use this carefully in production
 def add_comment(request, slug):
-    if request.method == 'POST':
-        post = get_object_or_404(Post, slug=slug)
-        parent_id = request.POST.get('parent_id')
-        comment_text = request.POST.get('comment')
-        
-        parent = None
-        if parent_id:
-            parent = Comment.objects.get(id=parent_id)
-        
-        comment = Comment.objects.create(
-            post=post,
-            comment=comment_text,
-            name=request.user.get_full_name() or request.user.username,
-            email=request.user.email,
-            parent=parent,
-            approved=True
-        )
-        
-        # Prepare comment data for JSON response
-        comment_data = {
-            'id': comment.id,
-            'name': comment.name,
-            'comment': comment.comment,
-            'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p'),
-            'parent_id': parent.id if parent else None,
-        }
-        
-        return JsonResponse({
-            'status': 'success', 
-            'comment': comment_data
-        })
+    logger.info(f"Received request method: {request.method}")
+    logger.info(f"Request POST data: {request.POST}")
     
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+    if request.method == 'POST':
+        try:
+            post = get_object_or_404(Post, slug=slug)
+            comment_text = request.POST.get('comment')
+            parent_id = request.POST.get('parent_id')
+            
+            logger.info(f"Comment text: {comment_text}")
+            logger.info(f"Parent ID: {parent_id}")
+            
+            if not comment_text:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Comment text is required'
+                }, status=400)
+            
+            parent = Comment.objects.get(id=parent_id) if parent_id else None
+            
+            comment = Comment.objects.create(
+                post=post,
+                user=request.user,
+                comment=comment_text,
+                parent=parent,
+                approved=True
+            )
+            
+            logger.info(f"Comment created successfully: {comment.id}")
+            
+            return JsonResponse({
+                'status': 'success', 
+                'comment': {
+                    'id': comment.id,
+                    'username': comment.user.username,
+                    'comment': comment.comment,
+                    'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                    'parent_id': parent.id if parent else None,
+                }
+            })
+        
+        except Exception as e:
+            logger.error(f"Error creating comment: {str(e)}")
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=400)
+    
+    logger.warning("Invalid request method")
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @login_required
 def add_reaction(request, slug, reaction_type):

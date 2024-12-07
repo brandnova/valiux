@@ -1,7 +1,7 @@
 {% extends 'core/base.html' %}
-{% block title %}Home{% endblock %}
+{% block title %}{{ page.title }}{% endblock %}
 {% block content %}
-    <section class="px-5">
+    <section class="p-5">
         {% if ads.homepage_top %}
         {{ ads.homepage_top.code|safe }}
         {% endif %}

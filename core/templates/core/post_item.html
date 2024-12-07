@@ -1,0 +1,29 @@
+{% load static %}
+<div class="d-md-flex post-entry-2 small-img">
+    <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
+        <img src="{% if post.image %}{{ post.image.url }}{% else %}{% static 'assets/img/default-post-img.jpg' %}{% endif %}" alt="{{ post.title }}" class="img-fluid rounded">
+    </a>
+    <div>
+        <div class="post-meta">
+            <span class="date">{{ post.category.name }}</span> 
+            <span class="mx-1">&bullet;</span> 
+            <span>{{ post.created_at|date:"M jS 'y" }}</span>
+            <span class="mx-1">&bullet;</span> 
+            <span><i class="bi bi-eye-fill"></i> {{ post.views }} Views</span>
+        </div>
+        <h3><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h3>
+        <p>{{ post.excerpt }}</p>
+        <div class="d-flex align-items-center author">
+            <div class="photo">
+                {% if post.author.profile.avatar %}
+                    <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.title }}" class="img-fluid">
+                {% else %}
+                    <img src="{% static 'assets/img/default-avatar.jpg' %}" alt="Default Avatar" class="img-fluid">
+                {% endif %}
+            </div>
+            <div class="name">
+                <h3 class="m-0 p-0">{{ post.author.first_name }} {{ post.author.last_name }}</h3>
+            </div>
+        </div>
+    </div>
+</div>

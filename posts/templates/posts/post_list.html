@@ -1,54 +1,121 @@
 {% extends 'posts/base.html' %}
 {% block title %} All Posts {% endblock %}
 {% block content %}
+{% load static %}
 
     <!-- ======= Search Results ======= -->
     <section id="search-result" class="search-result">
         <div class="container">
           <div class="row">
             <div class="col-md-9">
-              <h3 class="category-title">Posts</h3>
-  
-              
-  
-                {% for post in posts %}
-                    <div class="d-md-flex post-entry-2 small-img">
-                        <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
-                            <img src="{% if post.image %}{{ post.image.url }}{% endif %}" alt="" class="img-fluid">
-                        </a>
-                        <div>
-                            <div class="post-meta"><span class="date">{{ post.category.name }}</span> <span class="mx-1">&bullet;</span> <span>{{ post.published_date|date:"M jS 'y" }}</span></div>
-                            <h3><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h3>
-                            <p>{{ post.excerpt }}</p>
-                            <div class="d-flex align-items-center author">
-                                <div class="photo"><img src="{% if post.author.profile.avatar %}{{ post.author.profile.avatar.url }}{% endif %}" alt="{{ post.title }}" class="img-fluid"></div>
-                                <div class="name">
-                                <h3 class="m-0 p-0">{{ post.author.first_name }} {{ post.author.last_name }}</h3>
-                                </div>
+              <div class="search-results">
+                {% if search_query %}
+                    <h3 class="category-title">Search Results for "{{ search_query }}"</h3>
+                    {% if posts %}
+                        {% for post in posts %}
+                            <div class="d-md-flex post-entry-2 small-img">
+                              <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
+                                <img src="{% if post.image %}{{ post.image.url }}{% else %}{% static 'assets/img/default-post-img.jpg' %}{% endif %}" alt="{{ post.title }}" class="img-fluid rounded">
+                              </a>
+                              <div>
+                                  <div class="post-meta">
+                                      <span class="date">{{ post.category.name }}</span> 
+                                      <span class="mx-1">&bullet;</span> 
+                                      <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                                      <span class="mx-1">&bullet;</span> 
+                                      <span><i class="bi bi-eye-fill"></i> {{ post.views }} Views</span>
+                                  </div>
+                                  <h3><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h3>
+                                  <p>{{ post.excerpt }}</p>
+                                  <div class="d-flex align-items-center author">
+                                      <div class="photo">
+                                          {% if post.author.profile.avatar %}
+                                              <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.title }}" class="img-fluid">
+                                          {% else %}
+                                              <img src="{% static 'assets/img/default-avatar.jpg' %}" alt="Default Avatar" class="img-fluid">
+                                          {% endif %}
+                                      </div>
+                                      <div class="name">
+                                          <h3 class="m-0 p-0">{{ post.author.first_name }} {{ post.author.last_name }}</h3>
+                                      </div>
+                                  </div>
+                              </div>
                             </div>
-                        </div>
-                    </div>
-                {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <p>No posts found matching "{{ search_query }}".</p>
+                    {% endif %}
+                {% else %}
+                  <h3 class="category-title">Posts</h3>
+                  {% for post in posts %}
+                      <div class="d-md-flex post-entry-2 small-img">
+                          <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
+                              {% if post.image %}
+                                  <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid rounded">
+                              {% else %}
+                                  <img src="{% static 'assets/img/default-post-img.jpg' %}" alt="Default Image" class="img-fluid">
+                              {% endif %}
+                          </a>
+                          <div>
+                              <div class="post-meta">
+                                  <span class="date">{{ post.category.name }}</span> 
+                                  <span class="mx-1">&bullet;</span> 
+                                  <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                                  <span class="mx-1">&bullet;</span> 
+                                  <span><i class="bi bi-eye-fill"></i> {{ post.views }} Views</span>
+                              </div>
+                              <h3><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h3>
+                              <p>{{ post.excerpt }}</p>
+                              <div class="d-flex align-items-center author">
+                                  <div class="photo">
+                                      {% if post.author.profile.avatar %}
+                                          <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.title }}" class="img-fluid">
+                                      {% else %}
+                                          <img src="{% static 'assets/img/default-avatar.jpg' %}" alt="Default Avatar" class="img-fluid">
+                                      {% endif %}
+                                  </div>
+                                  <div class="name">
+                                      <h3 class="m-0 p-0">{{ post.author.first_name }} {{ post.author.last_name }}</h3>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  {% empty %}
+                      <p>No posts available.</p>
+                  {% endfor %}
+                {% endif %}
+              </div>
+                
 
               <!-- Paging -->
               <div class="text-start py-4">
-                <div class="custom-pagination">
-                  <a href="#" class="prev">Prevous</a>
-                  <a href="#" class="active">1</a>
-                  <a href="#">2</a>
-                  <a href="#">3</a>
-                  <a href="#">4</a>
-                  <a href="#">5</a>
-                  <a href="#" class="next">Next</a>
-                </div>
-              </div><!-- End Paging -->
-  
+                {% if posts.has_other_pages %}
+                    <div class="custom-pagination">
+                        {% if posts.has_previous %}
+                            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category|join:"," }}&{% endif %}{% if current_genre %}genre={{ current_genre|join:"," }}&{% endif %}page={{ posts.previous_page_number }}" class="prev">Previous</a>
+                        {% endif %}
+
+                        {% for num in posts.paginator.page_range %}
+                            {% if posts.number == num %}
+                                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category|join:"," }}&{% endif %}{% if current_genre %}genre={{ current_genre|join:"," }}&{% endif %}page={{ num }}" class="active">{{ num }}</a>
+                            {% else %}
+                                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category|join:"," }}&{% endif %}{% if current_genre %}genre={{ current_genre|join:"," }}&{% endif %}page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if posts.has_next %}
+                            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category|join:"," }}&{% endif %}{% if current_genre %}genre={{ current_genre|join:"," }}&{% endif %}page={{ posts.next_page_number }}" class="next">Next</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+              </div>
+
             </div>
-  
+
             <div class="col-md-3">
               <!-- ======= Sidebar ======= -->
               <div class="aside-block">
-  
+
                 <ul class="nav nav-pills custom-tab-nav mb-4" id="pills-tab" role="tablist">
                   <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="pills-popular-tab" data-bs-toggle="pill" data-bs-target="#pills-popular" type="button" role="tab" aria-controls="pills-popular" aria-selected="true">Popular</button>
@@ -60,75 +127,97 @@
                     <button class="nav-link" id="pills-latest-tab" data-bs-toggle="pill" data-bs-target="#pills-latest" type="button" role="tab" aria-controls="pills-latest" aria-selected="false">Latest</button>
                   </li>
                 </ul>
-  
+
                 <div class="tab-content" id="pills-tabContent">
-  
+
                   <!-- Popular -->
                   <div class="tab-pane fade show active" id="pills-popular" role="tabpanel" aria-labelledby="pills-popular-tab">
-                    <div class="post-entry-1 border-bottom">
-                      <div class="post-meta"><span class="date">Sport</span> <span class="mx-1">&bullet;</span> <span>Jul 5th '22</span></div>
-                      <h2 class="mb-2"><a href="#">How to Avoid Distraction and Stay Focused During Video Calls?</a></h2>
-                      <span class="author mb-3 d-block">Jenny Wilson</span>
-                    </div>
-  
+                    {% for post in popular_posts %}
+                        <div class="post-entry-1 border-bottom">
+                          <div class="post-meta">
+                              <span class="date">{{ post.category.name }}</span> 
+                              <span class="mx-1">&bullet;</span> 
+                              <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                          </div>
+                          <h2 class="mb-2">
+                              <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
+                          </h2>
+                          <span class="author mb-3 d-block">{{ post.author.first_name }} {{ post.author.last_name }}</span>
+                        </div>
+                    {% empty %}
+                        <p>No popular posts available.</p>
+                    {% endfor %}
                   </div> <!-- End Popular -->
-  
+
                   <!-- Trending -->
                   <div class="tab-pane fade" id="pills-trending" role="tabpanel" aria-labelledby="pills-trending-tab">
-                    <div class="post-entry-1 border-bottom">
-                      <div class="post-meta"><span class="date">Lifestyle</span> <span class="mx-1">&bullet;</span> <span>Jul 5th '22</span></div>
-                      <h2 class="mb-2"><a href="#">17 Pictures of Medium Length Hair in Layers That Will Inspire Your New Haircut</a></h2>
-                      <span class="author mb-3 d-block">Jenny Wilson</span>
-                    </div>
-  
+                    {% for post in trending_posts %}
+                        <div class="post-entry-1 border-bottom">
+                          <div class="post-meta">
+                              <span class="date">{{ post.category.name }}</span> 
+                              <span class="mx-1">&bullet;</span> 
+                              <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                          </div>
+                          <h2 class="mb-2">
+                              <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
+                          </h2>
+                          <span class="author mb-3 d-block">{{ post.author.first_name }} {{ post.author.last_name }}</span>
+                        </div>
+                    {% empty %}
+                        <p>No trending posts available.</p>
+                    {% endfor %}
                   </div> <!-- End Trending -->
-  
+
                   <!-- Latest -->
                   <div class="tab-pane fade" id="pills-latest" role="tabpanel" aria-labelledby="pills-latest-tab">
-                    <div class="post-entry-1 border-bottom">
-                      <div class="post-meta"><span class="date">Lifestyle</span> <span class="mx-1">&bullet;</span> <span>Jul 5th '22</span></div>
-                      <h2 class="mb-2"><a href="#">Life Insurance And Pregnancy: A Working Mom’s Guide</a></h2>
-                      <span class="author mb-3 d-block">Jenny Wilson</span>
-                    </div>
-  
+                    {% for post in latest_posts %}
+                        <div class="post-entry-1 border-bottom">
+                          <div class="post-meta">
+                              <span class="date">{{ post.category.name }}</span> 
+                              <span class="mx-1">&bullet;</span> 
+                              <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                          </div>
+                          <h2 class="mb-2">
+                              <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
+                          </h2>
+                          <span class="author mb-3 d-block">{{ post.author.first_name }} {{ post.author.last_name }}</span>
+                        </div>
+                    {% empty %}
+                        <p>No latest posts available.</p>
+                    {% endfor %}
                   </div> <!-- End Latest -->
-  
+
                 </div>
               </div>
-  
-              <div class="aside-block">
-                <h3 class="aside-title">Video</h3>
-                <div class="video-post">
-                  <a href="#" class="glightbox link-video">
-                    <span class="bi-play-fill"></span>
-                    <img src="assets/img/post-landscape-5.jpg" alt="" class="img-fluid">
-                  </a>
-                </div>
-              </div><!-- End Video -->
-  
-              <div class="aside-block">
+
+			        <div class="aside-block">
                 <h3 class="aside-title">Categories</h3>
                 <ul class="aside-links list-unstyled">
-                  <li><a href="category.html"><i class="bi bi-chevron-right"></i> Business</a></li>
-                  <li><a href="category.html"><i class="bi bi-chevron-right"></i> Culture</a></li>
-                  <li><a href="category.html"><i class="bi bi-chevron-right"></i> Sport</a></li>
-                  
+                  {% for category in categories %}
+                      <li>
+                          <a href="{% url 'post_list' %}?category={{ category.slug }}" 
+                            class="{% if current_category == category.slug %}active{% endif %}">
+                              <i class="bi bi-chevron-right"></i> {{ category.name }}
+                          </a>
+                      </li>
+                  {% empty %}
+                      <li>No categories available.</li>
+                  {% endfor %}
                 </ul>
               </div><!-- End Categories -->
-  
+
               <div class="aside-block">
-                <h3 class="aside-title">Tags</h3>
+                <h3 class="aside-title">Genre</h3>
                 <ul class="aside-tags list-unstyled">
-                  <li><a href="category.html">Business</a></li>
-                  <li><a href="category.html">Culture</a></li>
-                  <li><a href="category.html">Sport</a></li>
-                  <li><a href="category.html">Food</a></li>
-                  
+                  {% for genre in genres %}
+                      <li><a href="{% url 'post_list' %}?genre={{ genre.slug }}">{{ genre.name }}</a></li>
+                  {% empty %}
+                      <li>No genres available.</li>
+                  {% endfor %}
                 </ul>
-              </div><!-- End Tags -->
-            </div>
-  
-          </div>
+              </div><!-- End Genre -->
+
+          	</div>
         </div>
       </section> 
       <!-- End Search Result -->
