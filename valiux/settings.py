@@ -79,12 +79,24 @@ DATABASES = {
         # 'ENGINE': 'django.db.backends.sqlite3',
         # 'NAME': BASE_DIR / 'db.sqlite3',
 
+
+        # Offline Database
+        
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'valiux',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
+
+        # Online server
+
+        # 'ENGINE': 'django.db.backends.mysql',
+        # 'NAME': 'coursear_valiux',
+        # 'USER': 'coursear_valiux',
+        # 'PASSWORD': 'tF2Ek!9GEzcU',
+        # 'HOST': 'localhost',
+        # 'PORT': '3306',
     }
 }
 

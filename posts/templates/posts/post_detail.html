@@ -169,8 +169,117 @@
                     </div>
                 </div>
 
-              
+                <!-- Similar Posts Section -->
+                <section class="similar-posts py-5">
+                    <div class="container">
+                        <h3 class="mb-4">Similar Posts</h3>
+                        {% if similar_posts %}
+                            <div class="row g-3">
+                                {% for similar_post in similar_posts %}
+                                    <div class="col-md-4 col-sm-6">
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <a href="{% url 'post_detail' similar_post.slug %}" class="text-decoration-none">
+                                                {% if similar_post.image %}
+                                                    <img src="{{ similar_post.image.url }}" 
+                                                        alt="{{ similar_post.title }}" 
+                                                        class="card-img-top object-fit-cover" 
+                                                        style="height: 200px;">
+                                                {% else %}
+                                                    <img src="{% static 'assets/img/default-post-img.jpg' %}" 
+                                                        alt="Default Image" 
+                                                        class="card-img-top object-fit-cover" 
+                                                        style="height: 200px;">
+                                                {% endif %}
+                                            </a>
+                                            <div class="card-body p-3">
+                                                <div class="small text-muted mb-2">
+                                                    <span>{{ similar_post.category.name }}</span>
+                                                    <span class="mx-1">•</span>
+                                                    <span>{{ similar_post.created_at|date:"M jS 'y" }}</span>
+                                                    <span class="mx-1">•</span>
+                                                    <span><i class="bi bi-eye-fill"></i> {{ similar_post.views }}</span>
+                                                </div>
+                                                <h5 class="card-title mb-2">
+                                                    <a href="{% url 'post_detail' similar_post.slug %}" class="text-dark">
+                                                        {{ similar_post.title|truncatechars:50 }}
+                                                    </a>
+                                                </h5>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-2">
+                                                        {% if similar_post.author.profile.avatar %}
+                                                            <img src="{{ similar_post.author.profile.avatar.url }}" 
+                                                                alt="{{ similar_post.author.get_full_name }}" 
+                                                                class="rounded-circle" 
+                                                                style="width: 30px; height: 30px; object-fit: cover;">
+                                                        {% else %}
+                                                            <img src="{% static 'assets/img/default-avatar.jpg' %}" 
+                                                                alt="Default Avatar" 
+                                                                class="rounded-circle" 
+                                                                style="width: 30px; height: 30px; object-fit: cover;">
+                                                        {% endif %}
+                                                    </div>
+                                                    <small class="text-muted">{{ similar_post.author.get_full_name }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No similar posts found.</p>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <!-- More Posts from Author Section -->
+                <section class="author-posts py-5 bg-light rounded">
+                    <div class="container">
+                        <h3 class="mb-4">More from {{ post.author.get_full_name }}</h3>
+                        {% if author_posts %}
+                            <div class="row g-3">
+                                {% for author_post in author_posts %}
+                                    <div class="col-md-4 col-sm-6">
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <a href="{% url 'post_detail' author_post.slug %}" class="text-decoration-none">
+                                                {% if author_post.image %}
+                                                    <img src="{{ author_post.image.url }}" 
+                                                        alt="{{ author_post.title }}" 
+                                                        class="card-img-top object-fit-cover" 
+                                                        style="height: 200px;">
+                                                {% else %}
+                                                    <img src="{% static 'assets/img/default-post-img.jpg' %}" 
+                                                        alt="Default Image" 
+                                                        class="card-img-top object-fit-cover" 
+                                                        style="height: 200px;">
+                                                {% endif %}
+                                            </a>
+                                            <div class="card-body p-3">
+                                                <div class="small text-muted mb-2">
+                                                    <span>{{ author_post.category.name }}</span>
+                                                    <span class="mx-1">•</span>
+                                                    <span>{{ author_post.created_at|date:"M jS 'y" }}</span>
+                                                    <span class="mx-1">•</span>
+                                                    <span><i class="bi bi-eye-fill"></i> {{ author_post.views }}</span>
+                                                </div>
+                                                <h5 class="card-title mb-2">
+                                                    <a href="{% url 'post_detail' author_post.slug %}" class="text-dark">
+                                                        {{ author_post.title|truncatechars:50 }}
+                                                    </a>
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No other posts from this author.</p>
+                        {% endif %}
+                    </div>
+                </section>
+
             </div>
+
+            
             
             <!-- Sidebar content remains the same -->
             <div class="col-md-3">
@@ -261,21 +370,93 @@
                   </div>
                 </div><!-- End Video --> {% endcomment %}
   
+                <style>
+                    /* Style the subcategories */
+                    .subcategories {
+                        margin-left: 15px;
+                        max-height: 0; /* Collapse by default */
+                        overflow: hidden;
+                        transition: max-height 0.3s ease-out; /* Smooth transition */
+                    }
+
+                    /* Expanded state */
+                    .subcategories.show {
+                        max-height: 500px; /* A high enough value to accommodate content */
+                    }
+
+                    /* Optional styling for toggle button */
+                    .toggle-subcategories {
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        padding: 0;
+                        margin-left: 5px;
+                        color: #555;
+                    }
+
+                    .toggle-subcategories i {
+                        transition: transform 0.3s ease-out;
+                    }
+                </style>
+
                 <div class="aside-block">
-                  <h3 class="aside-title">Categories</h3>
-                  <ul class="aside-links list-unstyled">
-                    {% for category in categories %}
-                        <li>
-                            <a href="{% url 'post_list' %}?category={{ category.slug }}" 
-                              class="{% if current_category == category.slug %}active{% endif %}">
-                                <i class="bi bi-chevron-right"></i> {{ category.name }}
-                            </a>
-                        </li>
-                    {% empty %}
-                        <li>No categories available.</li>
-                    {% endfor %}
-                  </ul>
+                    <h3 class="aside-title">Categories</h3>
+                    <ul class="aside-links list-unstyled">
+                        {% for category in categories %}
+                            <li>
+                                <!-- Parent category link -->
+                                <a href="{% url 'post_list' %}?category={{ category.slug }}" 
+                                    class="parent-link">
+                                    <i class="bi bi-chevron-right"></i> {{ category.name }}
+                                </a>
+                                
+                                <!-- Toggle button for subcategories -->
+                                {% if category.subcategories.all %}
+                                    <button class="toggle-subcategories rounded border p-1 my-1 w-100 text-dark" aria-label="Toggle subcategories">
+                                        <i class="bi bi-chevron-down"></i> <!-- Default icon -->
+                                    </button>
+                                {% endif %}
+                                
+                                <!-- Subcategories -->
+                                {% if category.subcategories.all %}
+                                    <ul class="subcategories list-unstyled">
+                                        {% for subcategory in category.subcategories.all %}
+                                            <li>
+                                                <a href="{% url 'post_list' %}?category={{ subcategory.slug }}">
+                                                    <i class="bi bi-dot"></i> {{ subcategory.name }}
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% empty %}
+                            <li>No categories available.</li>
+                        {% endfor %}
+                    </ul>
                 </div><!-- End Categories -->
+
+                <!-- Add this script at the end of your template or in a separate JS file -->
+                <script>
+                    document.querySelectorAll('.toggle-subcategories').forEach((toggleButton) => {
+                        toggleButton.addEventListener('click', (event) => {
+                            // Get the sibling element (subcategories list)
+                            const subcategories = toggleButton.nextElementSibling;
+
+                            // Check if the subcategories exist and toggle the 'show' class
+                            if (subcategories && subcategories.classList.contains('subcategories')) {
+                                subcategories.classList.toggle('show');
+
+                                // Change the icon dynamically
+                                const icon = toggleButton.querySelector('i');
+                                if (icon) {
+                                    icon.classList.toggle('bi-chevron-down'); // Default closed icon
+                                    icon.classList.toggle('bi-chevron-up');   // Opened icon
+                                }
+                            }
+                        });
+                    });
+                </script>
   
                 <div class="aside-block">
                   <h3 class="aside-title">Genre</h3>
