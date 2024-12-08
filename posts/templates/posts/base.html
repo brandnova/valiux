@@ -28,7 +28,8 @@
     <meta property="og:url" content="{% if post %}{{ request.build_absolute_uri }}{% else %}{{ site_settings.og_url }}{% endif %}">
     <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
 
-
+    <!-- Post Reactions Meta -->
+    <meta name="post-slug" content="{{ post.slug }}">
 
     <!-- Favicon -->
     {% if site_settings.favicon %}
@@ -50,6 +51,7 @@
     <!-- Template Main CSS Files -->
     <link href="{% static 'assets/css/variables.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/css/buttom-nav.css' %}" rel="stylesheet">
 
 </head>
 
@@ -178,7 +180,7 @@
                 </div>
             </div>
 
-            <div class="footer-legal">
+            <div class="footer-legal mb-5">
                 <div class="container">
 
                     <div class="row justify-content-between">
@@ -212,7 +214,7 @@
 
         </footer>
 
-    <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="scroll-top d-flex align-items-center justify-content-center" style="margin-bottom: 70px;"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
     <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -223,6 +225,9 @@
 
     <!-- Template Main JS File -->
     <script src="{% static 'assets/js/main.js' %}"></script>
+
+    <!-- Post Details Page JS File (Bottom Nav) -->
+    <script src="{% static 'assets/js/buttom-nav.js' %}"></script>
 
 </body>
 
