@@ -21,31 +21,51 @@ def get_client_ip(request: HttpRequest):
 
 def post_list(request):
     # Initial queryset of published posts
-    posts = Post.objects.filter(status='published').order_by('-published_date')
+    posts = Post.objects.filter(status='published').order_by('-created_at')
 
-    # Fetch all categories and genres
-    categories = Category.objects.all()
+    # Fetch all categories and organize by parent
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related('subcategories')
+
+    # Fetch all genres
     genres = Genre.objects.all()
+
+    # Get category slugs from request
+    category_slugs = request.GET.getlist('category')
+    if category_slugs:
+        # Find all matching categories (including parents and children)
+        matching_categories = Category.objects.filter(slug__in=category_slugs)
+        
+        # Create a list to store all relevant category IDs
+        category_ids = []
+        
+        for category in matching_categories:
+            # Add the category itself
+            category_ids.append(category.id)
+            
+            # If it's a parent category, add all its subcategory IDs
+            if not category.parent:
+                category_ids.extend(category.subcategories.values_list('id', flat=True))
+        
+        # Filter posts by the collected category IDs
+        posts = posts.filter(category__id__in=category_ids)
+
+    # Advanced Genre Filtering
+    genre_slugs = request.GET.getlist('genre')
+    if genre_slugs:
+        # Filter posts that have ALL selected genres
+        posts = posts.filter(genres__slug__in=genre_slugs).distinct()
 
     # Search functionality
     search_query = request.GET.get('search', '')
     if search_query:
         posts = posts.filter(
-            Q(title__icontains=search_query) | Q(content__icontains=search_query) | Q(excerpt__icontains=search_query)
+            Q(title__icontains=search_query) | 
+            Q(content__icontains=search_query) | 
+            Q(excerpt__icontains=search_query)
         )
 
-    # Filtering by multiple categories
-    category_slugs = request.GET.getlist('category')
-    if category_slugs:
-        posts = posts.filter(category__slug__in=category_slugs)
-
-    # Filtering by multiple genres
-    genre_slugs = request.GET.getlist('genre')
-    if genre_slugs:
-        posts = posts.filter(genres__slug__in=genre_slugs)
-
     # Pagination
-    paginator = Paginator(posts, 10)  # Show 10 posts per page
+    paginator = Paginator(posts, 10)
     page = request.GET.get('page', 1)
 
     try:
@@ -55,7 +75,7 @@ def post_list(request):
     except EmptyPage:
         posts = paginator.page(paginator.num_pages)
 
-    # Fetch posts for sidebar tabs based on tags
+    # Additional context data
     popular_posts = Post.objects.filter(status='published', tag='popular').order_by('?')[:5]
     trending_posts = Post.objects.filter(status='published', tag='trending').order_by('?')[:5]
     latest_posts = Post.objects.filter(status='published', tag='latest').order_by('?')[:5]
@@ -74,16 +94,36 @@ def post_list(request):
     return render(request, 'posts/post_list.html', context)
 
 
+
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug, status='published')
+    
+    # Fetch similar posts based on category and genres
+    similar_posts = Post.objects.filter(
+        status='published'
+    ).exclude(
+        id=post.id
+    ).filter(
+        Q(category=post.category) | Q(genres__in=post.genres.all())
+    ).distinct().order_by('-views')[:6]
+    
+    # Fetch more posts from the same author
+    author_posts = Post.objects.filter(
+        status='published',
+        author=post.author
+    ).exclude(
+        id=post.id
+    ).order_by('-created_at')[:6]
+    
+    # Fetch categories with their subcategories, similar to post_list view
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related('subcategories')
+    
     genres = Genre.objects.all()
-    categories = Category.objects.all()
 
     # Fetch posts for sidebar tabs based on tags
     popular_posts = Post.objects.filter(status='published', tag='popular').order_by('?')[:5]
     trending_posts = Post.objects.filter(status='published', tag='trending').order_by('?')[:5]
     latest_posts = Post.objects.filter(status='published', tag='latest').order_by('?')[:5]
-
 
     # Track unique views using IP address
     client_ip = get_client_ip(request)
@@ -126,9 +166,12 @@ def post_detail(request, slug):
         'comments': comments,
         'comment_form': comment_form,
         'user_reaction': user_reaction,
-        'reaction_counts': reaction_counts
+        'reaction_counts': reaction_counts,
+        'similar_posts': similar_posts,
+        'author_posts': author_posts,
     }
     return render(request, 'posts/post_detail.html', context)
+
 
 @login_required
 @csrf_exempt  # Use this carefully in production

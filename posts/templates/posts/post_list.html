@@ -190,32 +190,173 @@
                 </div>
               </div>
 
-			        <div class="aside-block">
+              <style>
+                /* Style the subcategories */
+                .subcategories {
+                    margin-left: 15px;
+                    max-height: 0; /* Collapse by default */
+                    overflow: hidden;
+                    transition: max-height 0.3s ease-out; /* Smooth transition */
+                }
+            
+                /* Expanded state */
+                .subcategories.show {
+                    max-height: 500px; /* A high enough value to accommodate content */
+                }
+            
+                /* Optional styling for toggle button */
+                .toggle-subcategories {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 0;
+                    margin-left: 5px;
+                    color: #555;
+                }
+            
+                .toggle-subcategories i {
+                    transition: transform 0.3s ease-out;
+                }
+              </style>
+            
+
+			  <div class="aside-block">
                 <h3 class="aside-title">Categories</h3>
                 <ul class="aside-links list-unstyled">
-                  {% for category in categories %}
-                      <li>
-                          <a href="{% url 'post_list' %}?category={{ category.slug }}" 
-                            class="{% if current_category == category.slug %}active{% endif %}">
-                              <i class="bi bi-chevron-right"></i> {{ category.name }}
-                          </a>
-                      </li>
-                  {% empty %}
-                      <li>No categories available.</li>
-                  {% endfor %}
+                    {% for category in categories %}
+                        <li>
+                            <!-- Parent category link -->
+                            <a href="{% url 'post_list' %}?category={{ category.slug }}" 
+                               class="parent-link {% if current_category and category.slug in current_category %}active{% endif %}">
+                                <i class="bi bi-chevron-right"></i> {{ category.name }}
+                            </a>
+                            
+                            <!-- Toggle button for subcategories -->
+                            {% if category.subcategories.all %}
+                                <button class="toggle-subcategories rounded border p-1 my-1 w-100 text-dark" aria-label="Toggle subcategories">
+                                    <i class="bi bi-chevron-down"></i> <!-- Default icon -->
+                                </button>
+                            {% endif %}
+                            
+                            <!-- Subcategories -->
+                            {% if category.subcategories.all %}
+                                <ul class="subcategories list-unstyled">
+                                    {% for subcategory in category.subcategories.all %}
+                                        <li>
+                                            <a href="{% url 'post_list' %}?category={{ subcategory.slug }}"
+                                               class="{% if current_category and subcategory.slug in current_category %}active{% endif %}">
+                                                <i class="bi bi-dot"></i> {{ subcategory.name }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </li>
+                    {% empty %}
+                        <li>No categories available.</li>
+                    {% endfor %}
                 </ul>
-              </div><!-- End Categories -->
+              </div>
+            
+            
+
+              <script>
+                document.querySelectorAll('.toggle-subcategories').forEach((toggleButton) => {
+                    toggleButton.addEventListener('click', (event) => {
+                        // Get the sibling element (subcategories list)
+                        const subcategories = toggleButton.nextElementSibling;
+            
+                        // Check if the subcategories exist and toggle the 'show' class
+                        if (subcategories && subcategories.classList.contains('subcategories')) {
+                            subcategories.classList.toggle('show');
+            
+                            // Change the icon dynamically
+                            const icon = toggleButton.querySelector('i');
+                            if (icon) {
+                                icon.classList.toggle('bi-chevron-down'); // Default closed icon
+                                icon.classList.toggle('bi-chevron-up');   // Opened icon
+                            }
+                        }
+                    });
+                });
+              </script>
+            
+              
+              <!-- End Categories -->
 
               <div class="aside-block">
                 <h3 class="aside-title">Genre</h3>
                 <ul class="aside-tags list-unstyled">
-                  {% for genre in genres %}
-                      <li><a href="{% url 'post_list' %}?genre={{ genre.slug }}">{{ genre.name }}</a></li>
-                  {% empty %}
-                      <li>No genres available.</li>
-                  {% endfor %}
+                    {% for genre in genres %}
+                        <li>
+                            <a href="{% url 'post_list' %}?genre={{ genre.slug }}" 
+                               class="{% if current_genre and genre.slug in current_genre %}active{% endif %}">
+                                {{ genre.name }}
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li>No genres available.</li>
+                    {% endfor %}
                 </ul>
+            
+                <!-- Multi-genre selection helper -->
+                {% if current_genre %}
+                <div class="mt-3">
+                    <h4>Selected Genres:</h4>
+                    <div class="selected-genres">
+                        {% for genre_slug in current_genre %}
+                            <a href="{% url 'post_list' %}?{% for g in current_genre %}{% if g != genre_slug %}genre={{ g }}&{% endif %}{% endfor %}" 
+                               class="badge bg-secondary me-2">
+                                {% for genre in genres %}
+                                    {% if genre.slug == genre_slug %}
+                                        {{ genre.name }}
+                                    {% endif %}
+                                {% endfor %}
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
               </div><!-- End Genre -->
+
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const genreLinks = document.querySelectorAll('.aside-tags a');
+                    
+                    genreLinks.forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            
+                            // Get the current URL
+                            let url = new URL(window.location.href);
+                            
+                            // Get the genre slug from the clicked link
+                            const genreSlug = this.getAttribute('href').split('genre=')[1];
+                            
+                            // Get existing genre parameters
+                            const existingGenres = url.searchParams.getAll('genre');
+                            
+                            // Check if genre is already selected
+                            if (existingGenres.includes(genreSlug)) {
+                                // Remove the genre if already selected
+                                url.searchParams.delete('genre');
+                                existingGenres.forEach(genre => {
+                                    if (genre !== genreSlug) {
+                                        url.searchParams.append('genre', genre);
+                                    }
+                                });
+                            } else {
+                                // Add the genre
+                                url.searchParams.append('genre', genreSlug);
+                            }
+                            
+                            // Navigate to the new URL
+                            window.location.href = url.toString();
+                        });
+                    });
+                });
+              </script>
 
           	</div>
         </div>
