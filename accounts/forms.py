@@ -9,11 +9,11 @@ class UserRegisterForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
     first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    agree_to_terms = forms.BooleanField(required=True)
+    agree_to_terms = forms.BooleanField(required=True, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username', 'email', 'password1', 'password2']
+        fields = ['first_name', 'last_name', 'username', 'email', 'password1', 'password2', 'agree_to_terms']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -26,6 +26,15 @@ class UserRegisterForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise ValidationError("Email is already in use.")
         return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            user.profile.agree_to_terms = self.cleaned_data['agree_to_terms']
+            user.profile.save()
+        return user
+
     
 class CustomAuthenticationForm(AuthenticationForm):
     class Meta:

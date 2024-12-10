@@ -151,15 +151,17 @@
 
                             <ul class="footer-links footer-blog-entry list-unstyled">
                                 {% for recent_post in recent_posts %}
-                                <li>
-                                    <a href="{% url 'post_detail' recent_post.slug %}" class="d-flex align-items-center">
-                                        <img src="{{ recent_post.image.url }}" alt="{{ recent_post.title }}" class="img-fluid me-3">
-                                        <div>
-                                            <div class="post-meta d-block"><span class="date">{{ recent_post.category }}</span> <span class="mx-1">&bullet;</span> <span>{{ recent_post.created_at|date:"M jS 'y" }}</span></div>
-                                            <span>{{ recent_post.title }}</span>
-                                        </div>
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a href="{% url 'post_detail' recent_post.slug %}" class="d-flex align-items-center">
+                                            {% if recent_post.image %}
+                                                <img src="{{ recent_post.image.url }}" alt="{{ recent_post.title }}" class="img-fluid me-3">
+                                            {% endif %}
+                                            <div>
+                                                <div class="post-meta d-block"><span class="date">{{ recent_post.category }}</span> <span class="mx-1">&bullet;</span> <span>{{ recent_post.created_at|date:"M jS 'y" }}</span></div>
+                                                <span>{{ recent_post.title }}</span>
+                                            </div>
+                                        </a>
+                                    </li>
                                 {% endfor %}
                             </ul>
 

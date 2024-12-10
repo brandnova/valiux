@@ -11,6 +11,10 @@
               <div class="search-results">
                 {% if search_query %}
                     <h3 class="category-title">Search Results for "{{ search_query }}"</h3>
+                    {# Header Ad #}
+                    {% if ads.header %}
+                        {{ ads.header.code|safe }}
+                    {% endif %}
                     {% if posts %}
                         {% for post in posts %}
                             <div class="d-md-flex post-entry-2 small-img">
@@ -47,15 +51,17 @@
                     {% endif %}
                 {% else %}
                   <h3 class="category-title">Posts</h3>
+                    {# Header Ad #}
+                    {% if ads.header %}
+                        {{ ads.header.code|safe }}
+                    {% endif %}
                   {% for post in posts %}
                       <div class="d-md-flex post-entry-2 small-img">
-                          <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
-                              {% if post.image %}
-                                  <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid rounded">
-                              {% else %}
-                                  <img src="{% static 'assets/img/default-post-img.jpg' %}" alt="Default Image" class="img-fluid">
-                              {% endif %}
-                          </a>
+                        {% if post.image %}
+                            <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
+                                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid rounded">
+                            </a>
+                        {% endif %}
                           <div>
                               <div class="post-meta">
                                   <span class="date">{{ post.category.name }}</span> 
@@ -279,10 +285,7 @@
                         }
                     });
                 });
-              </script>
-            
-              
-              <!-- End Categories -->
+              </script><!-- End Categories -->
 
               <div class="aside-block">
                 <h3 class="aside-title">Genre</h3>
@@ -357,6 +360,12 @@
                     });
                 });
               </script>
+
+                {# Sidebar Ad #}
+                {% if ads.sidebar %}
+                    {{ ads.sidebar.code|safe }}
+                {% endif %}
+              
 
           	</div>
         </div>

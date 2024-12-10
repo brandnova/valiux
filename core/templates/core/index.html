@@ -8,6 +8,10 @@
     <!-- ======= Hero Slider Section ======= -->
     <section id="hero-slider" class="hero-slider">
       <div class="container-md" data-aos="fade-in">
+        {# Header Ad #}
+        {% if ads.header %}
+            {{ ads.header.code|safe }}
+        {% endif %}
         <div class="row">
           <div class="col-12">
             <div class="swiper sliderFeaturedPosts">
@@ -38,7 +42,7 @@
           </div>
         </div>
       </div>
-      <p class="text-center my-5">
+      <p class="text-center mt-5">
         {{ site_settings.site_description }}
       </p>
     </section><!-- End Hero Slider Section -->
@@ -46,10 +50,16 @@
     <!-- ======= Post Grid Section ======= -->
     <section id="posts" class="posts">
       <div class="container" data-aos="fade-up">
+        {# Top COntent Ad #}
+        {% if ads.content_top %}
+            {{ ads.content_top.code|safe }}
+        {% endif %}
         <div class="row g-5">
           <div class="col-lg-4">
             <div class="post-entry-1 lg">
-              <a href="{% url 'post_detail' single_post.slug %}"><img src="{{ single_post.image.url }}" alt="{{ single_post.title }}" class="img-fluid"></a>
+              {% if single_post.image %}
+                <a href="{% url 'post_detail' single_post.slug %}"><img src="{{ single_post.image.url }}" alt="{{ single_post.title }}" class="img-fluid"></a>
+              {% endif %}
               <div class="post-meta"><span class="date">{{ single_post.category }}</span> <span class="mx-1">&bullet;</span> <span>{{ single_post.created_at|date:"M jS 'y" }}</span></div>
               <h2><a href="{% url 'post_detail' single_post.slug %}">{{ single_post.title }}</a></h2>
               <p class="mb-4 d-block">{{ single_post.excerpt|truncatewords:20 }}</p>
@@ -92,7 +102,7 @@
                       <a href="single-post.html">
                         <span class="number">*</span>
                         <h3>{{ post.title }}</h3>
-                        <span class="author">{{ post.author }}</span>
+                        <span class="author">{{ post.author.first_name }} {{ post.author.last_name }}</span>
                       </a>
                     </li>
                     {% endfor %}

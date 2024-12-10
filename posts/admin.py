@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Genre, Post, Reaction, Comment, Bookmark
+from .models import Category, Genre, Post, PostView, Reaction, Comment, Bookmark
 
 
 @admin.register(Category)
@@ -31,6 +31,13 @@ class PostAdmin(admin.ModelAdmin):
         ('SEO Settings', {'fields': ('seo_title', 'meta_description', 'meta_keywords')}),
         ('Statistics', {'fields': ('views', 'created_at', 'updated_at',)}),
     )
+
+
+@admin.register(PostView)
+class PostViewAdmin(admin.ModelAdmin):
+    list_display = ('post', 'ip_address', 'viewed_at')
+    search_fields = ('post__title', 'ip_address')
+    list_filter = ('viewed_at',)
 
 
 @admin.register(Reaction)

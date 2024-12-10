@@ -112,6 +112,22 @@ class Post(models.Model):
         super().save(*args, **kwargs)
 
 
+class PostView(models.Model):
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='post_views')  
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField(blank=True, null=True)
+    viewed_at = models.DateTimeField(default=now)
+
+    class Meta:
+        unique_together = ('post', 'ip_address')  # Prevent duplicate views from the same IP on the same post
+        indexes = [
+            models.Index(fields=['post', 'ip_address']),
+        ]
+
+    def __str__(self):
+        return f"View on {self.post.title} from {self.ip_address}"
+    
+
 class Reaction(models.Model):
     REACTION_CHOICES = [
         ('like', 'Like'),

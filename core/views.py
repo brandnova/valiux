@@ -9,7 +9,7 @@ def home(request):
     all_posts = Post.objects.filter(status='published').order_by('-published_date')
     carousel = Post.objects.filter(status='published').exclude(image='').order_by('?')[:5]
     trending_posts = Post.objects.filter(status='published', tag='trending').order_by('?')[:5]
-    single_post = Post.objects.filter(status='published').order_by('?').first()
+    single_post = Post.objects.filter(status='published').exclude(image='').order_by('?').first()
 
     context = {
         'all_posts': all_posts[:6],  # Initially show only first 6 posts

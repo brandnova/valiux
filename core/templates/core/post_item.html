@@ -1,8 +1,10 @@
 {% load static %}
 <div class="d-md-flex post-entry-2 small-img">
-    <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
-        <img src="{% if post.image %}{{ post.image.url }}{% else %}{% static 'assets/img/default-post-img.jpg' %}{% endif %}" alt="{{ post.title }}" class="img-fluid rounded">
-    </a>
+    {% if post.image %}
+        <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid rounded">
+        </a>
+    {% endif %}
     <div>
         <div class="post-meta">
             <span class="date">{{ post.category.name }}</span> 

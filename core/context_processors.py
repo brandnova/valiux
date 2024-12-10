@@ -1,5 +1,8 @@
 from datetime import datetime, date
 from .models import SiteSettings, StaticPage
+from django.core.cache import cache
+from django.utils.timezone import now
+from datetime import timedelta
 from ads.models import Ad
 from posts.models import *
 
@@ -25,17 +28,35 @@ def static_pages_processor(request):
     }
 
 def ad_context_processor(request):
-    today = date.today()
-    ads = Ad.objects.filter(active=True, start_date__lte=today, end_date__gte=today)
-    ad_dict = {}
-    for ad in ads:
-        ad_dict[ad.location] = ad
+    # Create a unique cache key
+    cache_key = 'active_ads'
+    
+    # Try to get cached ads
+    cached_ads = cache.get(cache_key)
+    if cached_ads is not None:
+        return {'ads': cached_ads}
+    
+    # If not in cache, fetch from database
+    today = now().date()
+    ads = Ad.objects.filter(
+        active=True, 
+        start_date__lte=today, 
+        end_date__gte=today
+    )
+    
+    # Create ad dictionary
+    ad_dict = {ad.location: ad for ad in ads}
+    
+    # Cache the ads for 1 hour
+    cache.set(cache_key, ad_dict, 3600)  # 3600 seconds = 1 hour
+    
     return {'ads': ad_dict}
+
 
 def posts_context_processor(request):
     
     categories = Category.objects.all()
-    recent_posts = Post.objects.filter(status='published').order_by('-created_at')[:5]
+    recent_posts = Post.objects.filter(status='published').exclude(image='').order_by('-created_at')[:5]
 
     return {
         'categories' : categories,

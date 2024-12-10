@@ -5,7 +5,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpRequest
 from django.utils.timezone import now
 from django.db.models import Q
-from .models import  Post, Category, Genre, Comment, Reaction, Bookmark
+from .models import  Post, PostView, Category, Genre, Comment, Reaction, Bookmark
 import logging
 
 logger = logging.getLogger(__name__)
@@ -97,8 +97,18 @@ def post_list(request):
 
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug, status='published')
-    
-    # Fetch similar posts based on category and genres
+
+    # Log the view
+    client_ip = get_client_ip(request)
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+    # Check if this IP has already viewed this post
+    if not PostView.objects.filter(post=post, ip_address=client_ip).exists():
+        PostView.objects.create(post=post, ip_address=client_ip, user_agent=user_agent)
+        post.views += 1
+        post.save()
+
+    # Fetch related posts, categories, genres, etc.
     similar_posts = Post.objects.filter(
         status='published'
     ).exclude(
@@ -106,45 +116,27 @@ def post_detail(request, slug):
     ).filter(
         Q(category=post.category) | Q(genres__in=post.genres.all())
     ).distinct().order_by('-views')[:6]
-    
-    # Fetch more posts from the same author
+
     author_posts = Post.objects.filter(
         status='published',
         author=post.author
     ).exclude(
         id=post.id
     ).order_by('-created_at')[:6]
-    
-    # Fetch categories with their subcategories, similar to post_list view
+
     categories = Category.objects.filter(parent__isnull=True).prefetch_related('subcategories')
-    
     genres = Genre.objects.all()
 
-    # Fetch posts for sidebar tabs based on tags
     popular_posts = Post.objects.filter(status='published', tag='popular').order_by('?')[:5]
     trending_posts = Post.objects.filter(status='published', tag='trending').order_by('?')[:5]
     latest_posts = Post.objects.filter(status='published', tag='latest').order_by('?')[:5]
 
-    # Track unique views using IP address
-    client_ip = get_client_ip(request)
-    viewed_posts = request.session.get('viewed_posts', [])
-    unique_view_identifier = f"{post.id}_{client_ip}"  # Combines post ID and IP
-
-    if unique_view_identifier not in viewed_posts:
-        post.views += 1
-        post.save()
-        viewed_posts.append(unique_view_identifier)
-        request.session['viewed_posts'] = viewed_posts
-
-    # Fetch comments
     comments = post.comments.filter(parent__isnull=True, approved=True).order_by('-created_at')
 
-    # Compute reaction counts
     reaction_counts = {}
     for reaction_type, _ in Reaction.REACTION_CHOICES:
         reaction_counts[reaction_type] = post.reactions.filter(reaction_type=reaction_type).count()
 
-    # Check if the user has reacted to this post
     user_reaction = None
     if request.user.is_authenticated:
         try:
@@ -155,7 +147,6 @@ def post_detail(request, slug):
     from .forms import CommentForm
     comment_form = CommentForm()
 
-    # Context for the template
     context = {
         'post': post,
         'genres': genres,
@@ -171,7 +162,6 @@ def post_detail(request, slug):
         'author_posts': author_posts,
     }
     return render(request, 'posts/post_detail.html', context)
-
 
 @login_required
 @csrf_exempt  # Use this carefully in production

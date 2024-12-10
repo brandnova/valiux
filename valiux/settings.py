@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     'django_cleanup.apps.CleanupConfig',
     'django_ckeditor_5',
     'accounts',
-    'ads',
+    'ads.apps.AdsConfig',
     'core',
     'newsletter',
     'posts',
@@ -148,6 +148,14 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
 
 
 # Path to store uploaded images

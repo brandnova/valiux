@@ -8,6 +8,7 @@ class Profile(models.Model):
     bio = models.TextField(blank=True, null=True)
     avatar = models.ImageField(default='default.jpg', upload_to='profile_images')
     phone = models.CharField(max_length=20, null=True)
+    agree_to_terms = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.user.username} Profile'
