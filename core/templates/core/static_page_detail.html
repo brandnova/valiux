@@ -1,15 +1,16 @@
 {% extends 'core/base.html' %}
 {% block title %}{{ page.title }}{% endblock %}
 {% block content %}
-    <section class="p-5">
-        {% if ads.homepage_top %}
-        {{ ads.homepage_top.code|safe }}
+    <section class="container py-5">
+        {% if ads.content_top %}
+            <div class="mb-4">
+                {{ ads.content_top.code|safe }}
+            </div>
         {% endif %}
 
-        <h1>{{ page.title }}</h1>
-        <div>
+        <h1 class="mb-4">{{ page.title }}</h1>
+        <div class="static-content">
             {{ page.content|safe }}
         </div>
     </section>
-    
 {% endblock %}

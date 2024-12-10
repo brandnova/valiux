@@ -6,19 +6,30 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
     <!-- Title -->
-    <title>{{ site_settings.site_name }} - {% block title %}{% endblock %}</title>
-    
+    <title>
+        {% if post and post.seo_title %}
+            {{ post.seo_title }}
+        {% elif post %}
+            {{ post.title }} - {{ site_settings.site_name }}
+        {% else %}
+            {{ site_settings.site_name }}
+        {% endif %}
+    </title>
+
     <!-- Basic Meta Tags -->
-    <meta name="description" content="{{ site_settings.meta_description }}">
-    <meta name="keywords" content="{{ site_settings.meta_keywords }}">
-    <meta name="author" content="{{ site_settings.meta_author }}">
+    <meta name="description" content="{% if post and post.meta_description %}{{ post.meta_description }}{% elif post and post.excerpt %}{{ post.excerpt }}{% elif post %}{{ post.content|truncatewords:30 }}{% else %}{{ site_settings.meta_description }}{% endif %}">
+    <meta name="keywords" content="{% if post and post.meta_keywords %}{{ post.meta_keywords }}{% else %}{{ site_settings.meta_keywords }}{% endif %}">
+    <meta name="author" content="{% if post %}{{ post.author.get_full_name }}{% else %}{{ site_settings.meta_author }}{% endif %}">
 
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="{{ site_settings.og_title }}">
-    <meta property="og:description" content="{{ site_settings.og_description }}">
-    <meta property="og:image" content="{% if site_settings.og_image %}{{ site_settings.og_image.url }}{% endif %}">
-    <meta property="og:url" content="{{ site_settings.og_url }}">
-    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% if post and post.seo_title %}{{ post.seo_title }}{% elif post %}{{ post.title }}{% else %}{{ site_settings.og_title }}{% endif %}">
+    <meta property="og:description" content="{% if post and post.meta_description %}{{ post.meta_description }}{% elif post and post.excerpt %}{{ post.excerpt }}{% elif post %}{{ post.content|truncatewords:30 }}{% else %}{{ site_settings.og_description }}{% endif %}">
+    <meta property="og:image" content="{% if post and post.image %}{{ post.image.url }}{% elif site_settings.og_image %}{{ site_settings.og_image.url }}{% endif %}">
+    <meta property="og:url" content="{% if post %}{{ request.build_absolute_uri }}{% else %}{{ site_settings.og_url }}{% endif %}">
+    <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
+
+    <!-- Post Reactions Meta -->
+    <meta name="post-slug" content="{{ post.slug }}">
 
     <!-- Favicon -->
     {% if site_settings.favicon %}
@@ -40,22 +51,7 @@
     <!-- Template Main CSS Files -->
     <link href="{% static 'assets/css/variables.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
-
-    <style>
-        .auth-container {
-            max-width: 600px;
-            min-width: 400px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-        .auth-title {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-    </style>
+    <link href="{% static 'assets/css/buttom-nav.css' %}" rel="stylesheet">
 
 </head>
 
@@ -186,7 +182,7 @@
                 </div>
             </div>
 
-            <div class="footer-legal">
+            <div class="footer-legal mb-5">
                 <div class="container">
 
                     <div class="row justify-content-between">
@@ -220,7 +216,7 @@
 
         </footer>
 
-    <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="scroll-top d-flex align-items-center justify-content-center" style="margin-bottom: 70px;"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
     <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -231,6 +227,9 @@
 
     <!-- Template Main JS File -->
     <script src="{% static 'assets/js/main.js' %}"></script>
+
+    <!-- Post Details Page JS File (Bottom Nav) -->
+    <script src="{% static 'assets/js/buttom-nav.js' %}"></script>
 
 </body>
 

@@ -6,30 +6,19 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
     <!-- Title -->
-    <title>
-        {% if post and post.seo_title %}
-            {{ post.seo_title }}
-        {% elif post %}
-            {{ post.title }} - {{ site_settings.site_name }}
-        {% else %}
-            {{ site_settings.site_name }}
-        {% endif %}
-    </title>
-
+    <title>{{ site_settings.site_name }} - {% block title %}{% endblock %}</title>
+    
     <!-- Basic Meta Tags -->
-    <meta name="description" content="{% if post and post.meta_description %}{{ post.meta_description }}{% elif post and post.excerpt %}{{ post.excerpt }}{% elif post %}{{ post.content|truncatewords:30 }}{% else %}{{ site_settings.meta_description }}{% endif %}">
-    <meta name="keywords" content="{% if post and post.meta_keywords %}{{ post.meta_keywords }}{% else %}{{ site_settings.meta_keywords }}{% endif %}">
-    <meta name="author" content="{% if post %}{{ post.author.get_full_name }}{% else %}{{ site_settings.meta_author }}{% endif %}">
+    <meta name="description" content="{{ site_settings.meta_description }}">
+    <meta name="keywords" content="{{ site_settings.meta_keywords }}">
+    <meta name="author" content="{{ site_settings.meta_author }}">
 
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="{% if post and post.seo_title %}{{ post.seo_title }}{% elif post %}{{ post.title }}{% else %}{{ site_settings.og_title }}{% endif %}">
-    <meta property="og:description" content="{% if post and post.meta_description %}{{ post.meta_description }}{% elif post and post.excerpt %}{{ post.excerpt }}{% elif post %}{{ post.content|truncatewords:30 }}{% else %}{{ site_settings.og_description }}{% endif %}">
-    <meta property="og:image" content="{% if post and post.image %}{{ post.image.url }}{% elif site_settings.og_image %}{{ site_settings.og_image.url }}{% endif %}">
-    <meta property="og:url" content="{% if post %}{{ request.build_absolute_uri }}{% else %}{{ site_settings.og_url }}{% endif %}">
-    <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
-
-    <!-- Post Reactions Meta -->
-    <meta name="post-slug" content="{{ post.slug }}">
+    <meta property="og:title" content="{{ site_settings.og_title }}">
+    <meta property="og:description" content="{{ site_settings.og_description }}">
+    <meta property="og:image" content="{% if site_settings.og_image %}{{ site_settings.og_image.url }}{% endif %}">
+    <meta property="og:url" content="{{ site_settings.og_url }}">
+    <meta property="og:type" content="website">
 
     <!-- Favicon -->
     {% if site_settings.favicon %}
@@ -51,7 +40,6 @@
     <!-- Template Main CSS Files -->
     <link href="{% static 'assets/css/variables.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
-    <link href="{% static 'assets/css/buttom-nav.css' %}" rel="stylesheet">
 
 </head>
 
@@ -163,15 +151,17 @@
 
                             <ul class="footer-links footer-blog-entry list-unstyled">
                                 {% for recent_post in recent_posts %}
-                                <li>
-                                    <a href="{% url 'post_detail' recent_post.slug %}" class="d-flex align-items-center">
-                                        <img src="{{ recent_post.image.url }}" alt="{{ recent_post.title }}" class="img-fluid me-3">
-                                        <div>
-                                            <div class="post-meta d-block"><span class="date">{{ recent_post.category }}</span> <span class="mx-1">&bullet;</span> <span>{{ recent_post.created_at|date:"M jS 'y" }}</span></div>
-                                            <span>{{ recent_post.title }}</span>
-                                        </div>
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a href="{% url 'post_detail' recent_post.slug %}" class="d-flex align-items-center">
+                                            {% if recent_post.image %}
+                                                <img src="{{ recent_post.image.url }}" alt="{{ recent_post.title }}" class="img-fluid me-3">
+                                            {% endif %}
+                                            <div>
+                                                <div class="post-meta d-block"><span class="date">{{ recent_post.category }}</span> <span class="mx-1">&bullet;</span> <span>{{ recent_post.created_at|date:"M jS 'y" }}</span></div>
+                                                <span>{{ recent_post.title }}</span>
+                                            </div>
+                                        </a>
+                                    </li>
                                 {% endfor %}
                             </ul>
 
@@ -180,7 +170,7 @@
                 </div>
             </div>
 
-            <div class="footer-legal mb-5">
+            <div class="footer-legal">
                 <div class="container">
 
                     <div class="row justify-content-between">
@@ -214,7 +204,7 @@
 
         </footer>
 
-    <a href="#" class="scroll-top d-flex align-items-center justify-content-center" style="margin-bottom: 70px;"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
     <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -225,9 +215,6 @@
 
     <!-- Template Main JS File -->
     <script src="{% static 'assets/js/main.js' %}"></script>
-
-    <!-- Post Details Page JS File (Bottom Nav) -->
-    <script src="{% static 'assets/js/buttom-nav.js' %}"></script>
 
 </body>
 

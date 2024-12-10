@@ -6,6 +6,7 @@ from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm, CustomAu
 from django.contrib import messages
 from django.utils import timezone
 from datetime import timedelta
+from posts.models import Bookmark
 
 def register(request):
     # Redirect authenticated users to the profile page
@@ -52,19 +53,24 @@ def logout_view(request):
 
 @login_required
 def profile(request):
-    u_form = UserUpdateForm(request.POST or None, instance=request.user)
-    p_form = ProfileUpdateForm(request.POST or None, request.FILES or None, instance=request.user.profile)
-    
     if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
             messages.success(request, 'Your profile has been updated!')
             return redirect('profile')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    bookmarked_posts = Bookmark.objects.filter(user=request.user).select_related('post')
 
     context = {
         'u_form': u_form,
         'p_form': p_form,
+        'bookmarked_posts': bookmarked_posts,
     }
 
     return render(request, 'accounts/profile.html', context)

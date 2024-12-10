@@ -17,17 +17,11 @@ Add video field to the model to show social media videos related to the post
 
 Initial display of comments profile pic and posted time.
 
-Ads display
+(Bottom nav bookmark highlight and reacion highlight is stored in local storage so it's not permanently set.)
 
 webp file upon upload 
 
-Authentication pages and static page proper styling. (Accept terms and conditions for registration)
-
-Forgot password functionality for login page.
-
 User Profile:
-   - View user profile
-   - Edit user profile
    - View posts by specific user
 
 RSS Feed:

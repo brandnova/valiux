@@ -1,4 +1,4 @@
-{% extends 'posts/base.html' %}
+{% extends 'posts/details_base.html' %}
 {% block title %} {{ post.title }} {% endblock %}
 {% block content %}
 {% load custom_filters %}
@@ -7,6 +7,10 @@
     <section class="single-post-content">
         <div class="container">
           <div class="row">
+            {# Top COntent Ad #}
+            {% if ads.content_top %}
+                {{ ads.content_top.code|safe }}
+            {% endif %}
             <div class="col-md-9 post-content" data-aos="fade-up">
                 <div class="single-post">
                     <!-- Post Meta and Title Remain the Same -->
@@ -29,6 +33,11 @@
                         <div class="mb-5">{{ highlighted_text|safe }}</div>
                     {% endwith %}
 
+                    {# Inner content Ad #}
+                    {% if ads.inner_content %}
+                        {{ ads.inner_content.code|safe }}
+                    {% endif %}
+
                     {% if post.image %}
                     <figure class="my-4 position-relative" style="padding-top: 57.1%;">
                         <img 
@@ -43,6 +52,10 @@
                     <p>{{ post.content|safe }}</p>
 
                 </div>
+                {# Inner content Ad #}
+                {% if ads.inner_content %}
+                    {{ ads.inner_content.code|safe }}
+                {% endif %}
                 
                 <!-- Comments Form -->
                 {% if user.is_authenticated and post.allow_comments %}
@@ -144,6 +157,11 @@
                     </div>
                 </div>
 
+                {# Inner content Ad #}
+                {% if ads.inner_content %}
+                    {{ ads.inner_content.code|safe }}
+                {% endif %}
+
                 <!-- Similar Posts Section -->
                 <section class="similar-posts py-5">
                     <div class="container">
@@ -153,32 +171,43 @@
                                 {% for similar_post in similar_posts %}
                                     <div class="col-md-4 col-sm-6">
                                         <div class="card h-100 border-0 shadow-sm">
+                                            {% if similar_post.image %}
                                             <a href="{% url 'post_detail' similar_post.slug %}" class="text-decoration-none">
-                                                {% if similar_post.image %}
-                                                    <img src="{{ similar_post.image.url }}" 
-                                                        alt="{{ similar_post.title }}" 
-                                                        class="card-img-top object-fit-cover" 
-                                                        style="height: 200px;">
-                                                {% else %}
-                                                    <img src="{% static 'assets/img/default-post-img.jpg' %}" 
-                                                        alt="Default Image" 
-                                                        class="card-img-top object-fit-cover" 
-                                                        style="height: 200px;">
-                                                {% endif %}
+                                                <img src="{{ similar_post.image.url }}" alt="{{ similar_post.title }}" class="card-img-top object-fit-cover" style="height: 200px;">
                                             </a>
+                                            {% endif %}
                                             <div class="card-body p-3">
-                                                <div class="small text-muted mb-2">
-                                                    <span>{{ similar_post.category.name }}</span>
-                                                    <span class="mx-1">•</span>
-                                                    <span>{{ similar_post.created_at|date:"M jS 'y" }}</span>
-                                                    <span class="mx-1">•</span>
-                                                    <span><i class="bi bi-eye-fill"></i> {{ similar_post.views }}</span>
+                                                <div class="card-body">
+                                                    {% if not similar_post.image %}
+                                                        <h5 class="card-title mb-2">
+                                                            <a href="{% url 'post_detail' similar_post.slug %}" class="text-dark">
+                                                                {{ similar_post.title|truncatechars:50 }}
+                                                            </a>
+                                                        </h5>
+                                                        <p>{{ similar_post.excerpt|truncatewords:50 }}</p>
+                                                        <div class="small text-muted mb-2">
+                                                            <span>{{ similar_post.category.name }}</span>
+                                                            <span class="mx-1">•</span>
+                                                            <span>{{ similar_post.created_at|date:"M jS 'y" }}</span>
+                                                            <span class="mx-1">•</span>
+                                                            <span><i class="bi bi-eye-fill"></i> {{ similar_post.views }}</span>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="small text-muted mb-2">
+                                                            <span>{{ similar_post.category.name }}</span>
+                                                            <span class="mx-1">•</span>
+                                                            <span>{{ similar_post.created_at|date:"M jS 'y" }}</span>
+                                                            <span class="mx-1">•</span>
+                                                            <span><i class="bi bi-eye-fill"></i> {{ similar_post.views }}</span>
+                                                        </div>
+                                                        <h5 class="card-title mb-2">
+                                                            <a href="{% url 'post_detail' similar_post.slug %}" class="text-dark">
+                                                                {{ similar_post.title|truncatechars:50 }}
+                                                            </a>
+                                                        </h5>
+                                                    {% endif %}
+                                                    
                                                 </div>
-                                                <h5 class="card-title mb-2">
-                                                    <a href="{% url 'post_detail' similar_post.slug %}" class="text-dark">
-                                                        {{ similar_post.title|truncatechars:50 }}
-                                                    </a>
-                                                </h5>
                                                 <div class="d-flex align-items-center">
                                                     <div class="me-2">
                                                         {% if similar_post.author.profile.avatar %}
@@ -206,6 +235,11 @@
                     </div>
                 </section>
 
+                {# Inner content Ad #}
+                {% if ads.inner_content %}
+                    {{ ads.inner_content.code|safe }}
+                {% endif %}
+
                 <!-- More Posts from Author Section -->
                 <section class="author-posts py-5 bg-light rounded">
                     <div class="container">
@@ -215,32 +249,41 @@
                                 {% for author_post in author_posts %}
                                     <div class="col-md-4 col-sm-6">
                                         <div class="card h-100 border-0 shadow-sm">
-                                            <a href="{% url 'post_detail' author_post.slug %}" class="text-decoration-none">
-                                                {% if author_post.image %}
-                                                    <img src="{{ author_post.image.url }}" 
-                                                        alt="{{ author_post.title }}" 
-                                                        class="card-img-top object-fit-cover" 
-                                                        style="height: 200px;">
-                                                {% else %}
-                                                    <img src="{% static 'assets/img/default-post-img.jpg' %}" 
-                                                        alt="Default Image" 
-                                                        class="card-img-top object-fit-cover" 
-                                                        style="height: 200px;">
-                                                {% endif %}
-                                            </a>
+                                            {% if author_post.image %}
+                                                <a href="{% url 'post_detail' author_post.slug %}" class="text-decoration-none">
+                                                    <img src="{{ author_post.image.url }}" alt="{{ author_post.title }}" class="card-img-top object-fit-cover" style="height: 200px;">
+                                                </a>
+                                            {% endif %}
                                             <div class="card-body p-3">
-                                                <div class="small text-muted mb-2">
-                                                    <span>{{ author_post.category.name }}</span>
-                                                    <span class="mx-1">•</span>
-                                                    <span>{{ author_post.created_at|date:"M jS 'y" }}</span>
-                                                    <span class="mx-1">•</span>
-                                                    <span><i class="bi bi-eye-fill"></i> {{ author_post.views }}</span>
-                                                </div>
-                                                <h5 class="card-title mb-2">
-                                                    <a href="{% url 'post_detail' author_post.slug %}" class="text-dark">
-                                                        {{ author_post.title|truncatechars:50 }}
-                                                    </a>
-                                                </h5>
+                                                {% if not author_post.image %}
+                                                    <h5 class="card-title mb-2">
+                                                        <a href="{% url 'post_detail' author_post.slug %}" class="text-dark">
+                                                            {{ author_post.title|truncatechars:50 }}
+                                                        </a>
+                                                    </h5>
+                                                    <p>{{ author_post.excerpt|truncatewords:50 }}</p>
+                                                    <div class="small text-muted mb-2">
+                                                        <span>{{ author_post.category.name }}</span>
+                                                        <span class="mx-1">•</span>
+                                                        <span>{{ author_post.created_at|date:"M jS 'y" }}</span>
+                                                        <span class="mx-1">•</span>
+                                                        <span><i class="bi bi-eye-fill"></i> {{ author_post.views }}</span>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="small text-muted mb-2">
+                                                        <span>{{ author_post.category.name }}</span>
+                                                        <span class="mx-1">•</span>
+                                                        <span>{{ author_post.created_at|date:"M jS 'y" }}</span>
+                                                        <span class="mx-1">•</span>
+                                                        <span><i class="bi bi-eye-fill"></i> {{ author_post.views }}</span>
+                                                    </div>
+                                                    <h5 class="card-title mb-2">
+                                                        <a href="{% url 'post_detail' author_post.slug %}" class="text-dark">
+                                                            {{ author_post.title|truncatechars:50 }}
+                                                        </a>
+                                                    </h5>
+                                                {% endif %}
+                                                
                                             </div>
                                         </div>
                                     </div>
@@ -255,8 +298,6 @@
             </div>
 
             
-            
-            <!-- Sidebar content remains the same -->
             <div class="col-md-3">
                 <!-- ======= Sidebar ======= -->
                 <div class="aside-block">
@@ -392,6 +433,11 @@
                     {% endfor %}
                   </ul>
                 </div><!-- End Genre -->
+
+                {# Sidebar Ad #}
+                {% if ads.sidebar %}
+                    {{ ads.sidebar.code|safe }}
+                {% endif %}
   
               </div>
           </div>
