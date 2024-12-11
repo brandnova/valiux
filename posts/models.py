@@ -38,6 +38,34 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+class Series(models.Model):
+    title = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(unique=True, max_length=255)
+    description = models.TextField(blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='series', null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='series')
+    image = models.ImageField(upload_to='series_images/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = "Series"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        """Returns the full URL for the series."""
+        from django.urls import reverse
+        return reverse('series_detail', args=[self.slug])
 
 
 class Post(models.Model):
@@ -61,10 +89,12 @@ class Post(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, related_name='posts')
     tag = models.CharField(max_length=10, choices=TAG_CHOICES, blank=True, null=True, help_text="Choose a tag for the post.")
     genres = models.ManyToManyField(Genre, related_name='posts', blank=True)
+    series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name='posts', blank=True, null=True, help_text="Select a series if this post belongs to one.")
+    episode_number = models.PositiveIntegerField(blank=True, null=True, help_text="Episode number in the series, if applicable.")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     allow_comments = models.BooleanField(default=True, help_text="Allow Commenting on this post?")
     views = models.PositiveIntegerField(default=0)
-    published_date = models.DateTimeField(blank=True, null=True)
+    published_date = models.DateTimeField(blank=True, null=True, help_text="Schedule published date.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     seo_title = models.CharField(max_length=255, blank=True, null=True)
@@ -127,6 +157,8 @@ class PostView(models.Model):
     def __str__(self):
         return f"View on {self.post.title} from {self.ip_address}"
     
+
+
 
 class Reaction(models.Model):
     REACTION_CHOICES = [

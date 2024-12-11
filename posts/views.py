@@ -5,7 +5,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpRequest
 from django.utils.timezone import now
 from django.db.models import Q
-from .models import  Post, PostView, Category, Genre, Comment, Reaction, Bookmark
+from .models import  Series, Post, PostView, Category, Genre, Comment, Reaction, Bookmark
 import logging
 
 logger = logging.getLogger(__name__)
@@ -94,6 +94,14 @@ def post_list(request):
     return render(request, 'posts/post_list.html', context)
 
 
+def series_list(request):
+    series = Series.objects.all()
+    return render(request, 'posts/series_list.html', {'series': series})
+
+def series_detail(request, slug):
+    series = get_object_or_404(Series, slug=slug)
+    posts = series.posts.filter(status='published').order_by('created_at')  # Use the related_name 'posts' from the Series model in the Post's ForeignKey field.
+    return render(request, 'posts/series_detail.html', {'series': series, 'posts': posts})
 
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug, status='published')
@@ -144,6 +152,13 @@ def post_detail(request, slug):
         except Reaction.DoesNotExist:
             pass
 
+    # Fetch other episodes in the series
+    episodes = None
+    if post.series:
+        episodes = post.series.posts.filter(
+            status='published'
+        ).exclude(id=post.id).order_by('episode_number')
+
     from .forms import CommentForm
     comment_form = CommentForm()
 
@@ -160,8 +175,10 @@ def post_detail(request, slug):
         'reaction_counts': reaction_counts,
         'similar_posts': similar_posts,
         'author_posts': author_posts,
+        'episodes': episodes,  # Pass episodes to the context
     }
     return render(request, 'posts/post_detail.html', context)
+
 
 @login_required
 @csrf_exempt  # Use this carefully in production

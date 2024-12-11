@@ -1,6 +1,8 @@
 {% extends 'core/base.html' %}
 {% block title %}Home{% endblock %}
 {% block content %}
+{% load static %}
+
     {% if ads.homepage_top %}
     {{ ads.homepage_top.code|safe }}
     {% endif %}
@@ -116,87 +118,146 @@
         </div> <!-- End .row -->
       </div>
     </section> <!-- End Post Grid Section -->
+
     <!-- Existing sections remain the same -->
-<section id="all-posts" class="container">
-  <div id="posts-container" class="row g-4">
-      {% for post in all_posts %}
-          <div class="col-12">
-              {% include 'core/post_item.html' with post=post %}
+  <section id="all-posts" class="container">
+    <div id="posts-container" class="row g-4">
+      {% for post in posts %}
+          <div class="d-md-flex post-entry-2 small-img post-item">
+          {% if post.image %}
+              <a href="{% url 'post_detail' post.slug %}" class="me-4 thumbnail">
+                  <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid rounded">
+              </a>
+          {% endif %}
+          <div>
+              <div class="post-meta">
+                  <span class="date">{{ post.category.name }}</span> 
+                  <span class="mx-1">&bullet;</span> 
+                  <span>{{ post.created_at|date:"M jS 'y" }}</span>
+                  <span class="mx-1">&bullet;</span> 
+                  <span><i class="bi bi-eye-fill"></i> {{ post.views }} Views</span>
+              </div>
+              <h3><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h3>
+              <p>{{ post.excerpt }}</p>
+              <div class="d-flex align-items-center author">
+                  <div class="photo">
+                      {% if post.author.profile.avatar %}
+                          <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.title }}" class="img-fluid">
+                      {% endif %}
+                  </div>
+                  <div class="name">
+                      <h3 class="m-0 p-0">{{ post.author.first_name }} {{ post.author.last_name }}</h3>
+                  </div>
+              </div>
+          </div>
           </div>
       {% endfor %}
-  </div>
-  
-  <div id="loading-indicator" class="text-center my-4" style="display: none;">
-      <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
-      </div>
-  </div>
-  
-  <div id="no-more-posts" class="text-center my-4" style="display: none;">
-      <p>Hi, You've reached the end.</p>
-  </div>
-</section>
+    </div>
 
-{% block extra_js %}
+    <!-- Loading indicator -->
+    <div id="loading" class="text-center my-4" style="display: none;">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <div id="no-more-posts" class="text-center my-4" style="display: none;">
+      <p>Congrats, you're all caught up.</p>
+    </div>
+
+  </section>
+
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      let page = 2;  // Start from page 2 since first page is already loaded
-      let loading = false;
-      let allPostsLoaded = false;
-      
+      let page = 2; // Start from page 2 as first page is already loaded
+      let isLoading = false;
       const postsContainer = document.getElementById('posts-container');
-      const loadingIndicator = document.getElementById('loading-indicator');
-      const noMorePostsIndicator = document.getElementById('no-more-posts');
-
+      const loadingIndicator = document.getElementById('loading');
+      const noMorePostsMessage = document.getElementById('no-more-posts');
+      let hasMorePosts = {{ is_paginated|yesno:"true,false" }};
+  
+      function createPostElement(post) {
+          const postDiv = document.createElement('div');
+          postDiv.className = 'd-md-flex post-entry-2 small-img post-item';
+          
+          let imageHTML = post.image_url 
+              ? `<a href="/post/${post.slug}" class="me-4 thumbnail">
+                    <img src="${post.image_url}" alt="${post.title}" class="img-fluid rounded">
+                </a>`
+              : '';
+  
+          let avatarHTML = post.author_avatar
+              ? `<img src="${post.author_avatar}" alt="${post.title}" class="img-fluid">`
+              : ``;
+  
+          postDiv.innerHTML = `
+              ${imageHTML}
+              <div>
+                  <div class="post-meta">
+                      <span class="date">${post.category}</span> 
+                      <span class="mx-1">&bullet;</span> 
+                      <span>${post.created_at}</span>
+                      <span class="mx-1">&bullet;</span> 
+                      <span><i class="bi bi-eye-fill"></i> ${post.views} Views</span>
+                  </div>
+                  <h3><a href="/post/${post.slug}">${post.title}</a></h3>
+                  <p>${post.excerpt}</p>
+                  <div class="d-flex align-items-center author">
+                      <div class="photo">
+                          ${avatarHTML}
+                      </div>
+                      <div class="name">
+                          <h3 class="m-0 p-0">${post.author_first_name} ${post.author_last_name}</h3>
+                      </div>
+                  </div>
+              </div>
+          `;
+  
+          return postDiv;
+      }
+  
       function loadMorePosts() {
-        if (loading || allPostsLoaded) return;
-
-        loading = true;
-        loadingIndicator.style.display = 'block';
-        noMorePostsIndicator.style.display = 'none';
-
-        fetch(`/load-more-posts/?page=${page}`)
-            .then(response => response.json())
-            .then(data => {
-                loading = false;
-                loadingIndicator.style.display = 'none';
-
-                if (data.posts_html) {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data.posts_html;
-                    const newPosts = tempDiv.children;
-
-                    for (let post of newPosts) {
-                        const col = document.createElement('div');
-                        col.className = 'col-12';
-                        col.appendChild(post);
-                        postsContainer.appendChild(col);
-                    }
-
-                    page++;
-                }
-
-                if (!data.has_more) {
-                    allPostsLoaded = true;
-                    noMorePostsIndicator.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-              loading = false;
+          if (isLoading || !hasMorePosts) return;
+  
+          isLoading = true;
+          loadingIndicator.style.display = 'block';
+  
+          fetch(`/?page=${page}`, {
+              headers: {
+                  'X-Requested-With': 'XMLHttpRequest'
+              }
+          })
+          .then(response => response.json())
+          .then(data => {
+              data.posts.forEach(post => {
+                  const postElement = createPostElement(post);
+                  postsContainer.appendChild(postElement);
+              });
+  
+              hasMorePosts = data.has_next;
+              page = data.next_page_number || page;
+  
+              if (!hasMorePosts) {
+                  noMorePostsMessage.style.display = 'block';
+              }
+  
               loadingIndicator.style.display = 'none';
+              isLoading = false;
+          })
+          .catch(error => {
+              console.error('Error loading posts:', error);
+              loadingIndicator.style.display = 'none';
+              isLoading = false;
           });
-        }
-
-        function checkScroll() {
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-                loadMorePosts();
-            }
-        }
-
-        window.addEventListener('scroll', checkScroll);
+      }
+  
+      window.addEventListener('scroll', function() {
+          if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 800) {
+              loadMorePosts();
+          }
       });
-    </script>
-  {% endblock %}
-    
+    });
+  
+  </script>
 {% endblock %}

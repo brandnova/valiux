@@ -1,0 +1,28 @@
+{% extends "posts/base.html" %}
+{% block content %}
+<section>
+    <div class="container" data-aos="fade-up">
+        <div class="row">
+            <div class="col-lg-12 text-center mb-5">
+            <h1 class="page-title">All Series</h1>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            {% for s in series %}
+                <div class="d-md-flex post-entry-2 half {% if forloop.counter|divisibleby:2 %}flex-row-reverse mt-5{% endif %}">
+                    <a href="{{ s.get_absolute_url }}" class="me-4 thumbnail">
+                        <img src="{{ s.image.url }}" alt="{{ s.title }}" class="img-fluid">
+                    </a>
+                    <div class="{% if forloop.counter|divisibleby:2 %}pe-md-5{% else %}ps-md-5{% endif %} mt-4 mt-md-0">
+                        <div class="post-meta mt-4">Category: {{ s.category.name }}</div>
+                        <a href="{{ s.get_absolute_url }}"><h4 class="mb-4 display-6">{{ s.title }}</h4></a>
+                        <p>{{ s.description|truncatewords:100 }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+
+        </div>
+    </div>
+</section>
+{% endblock %}

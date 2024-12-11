@@ -12,6 +12,34 @@
                 {{ ads.content_top.code|safe }}
             {% endif %}
             <div class="col-md-9 post-content" data-aos="fade-up">
+                {% if episodes %}
+                    <div class="container my-3">
+                        <h4>Other episodes in the "<span class="fw-bold">{{ post.series.title }}</span>" Series:</h4>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="text-center">#</th>
+                                        <th scope="col">Title</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for episode in episodes %}
+                                    <tr>
+                                        <td class="text-center">{{ episode.episode_number }}</td>
+                                        <td>
+                                            <a href="{{ episode.get_absolute_url }}" class="text-decoration-none">
+                                                {{ episode.title }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+
                 <div class="single-post">
                     <!-- Post Meta and Title Remain the Same -->
                     <div class="post-meta">
@@ -261,7 +289,7 @@
                                                             {{ author_post.title|truncatechars:50 }}
                                                         </a>
                                                     </h5>
-                                                    <p>{{ author_post.excerpt|truncatewords:50 }}</p>
+                                                    <p>{{ author_post.excerpt|truncatewords:20 }}</p>
                                                     <div class="small text-muted mb-2">
                                                         <span>{{ author_post.category.name }}</span>
                                                         <span class="mx-1">•</span>
