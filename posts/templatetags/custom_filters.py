@@ -22,3 +22,8 @@ def has_group(user, group_name):
     if user is None:
         return False
     return user.groups.filter(name=group_name).exists()
+
+@register.filter
+def split(value, delimiter):
+    """Splits the string by the given delimiter."""
+    return value.split(delimiter)

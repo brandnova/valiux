@@ -15,19 +15,10 @@ TODO!!!!!
 
 Add video field to the model to show social media videos related to the post
 
-Initial display of comments profile pic and posted time.
-
-(Bottom nav bookmark highlight and reacion highlight is stored in local storage so it's not permanently set.)
-
 webp file upon upload 
-
-User Profile:
-   - View posts by specific user
 
 RSS Feed:
    - Generate RSS feed for latest posts
 
 Basic SEO:
-   - Meta Descriptions: Allow custom meta descriptions for each post.
-   - Open Graph and Twitter Cards: Implement Open Graph and Twitter Cards for better sharing previews on social media.
    - Generate sitemap: Implement a site map page for all pages and other things needed.

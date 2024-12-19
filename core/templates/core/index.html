@@ -119,7 +119,6 @@
       </div>
     </section> <!-- End Post Grid Section -->
 
-    <!-- Existing sections remain the same -->
   <section id="all-posts" class="container">
     <div id="posts-container" class="row g-4">
       {% for post in posts %}
@@ -182,7 +181,7 @@
           postDiv.className = 'd-md-flex post-entry-2 small-img post-item';
           
           let imageHTML = post.image_url 
-              ? `<a href="/post/${post.slug}" class="me-4 thumbnail">
+              ? `<a href="/posts/${post.slug}" class="me-4 thumbnail">
                     <img src="${post.image_url}" alt="${post.title}" class="img-fluid rounded">
                 </a>`
               : '';
@@ -201,7 +200,7 @@
                       <span class="mx-1">&bullet;</span> 
                       <span><i class="bi bi-eye-fill"></i> ${post.views} Views</span>
                   </div>
-                  <h3><a href="/post/${post.slug}">${post.title}</a></h3>
+                  <h3><a href="/posts/${post.slug}">${post.title}</a></h3>
                   <p>${post.excerpt}</p>
                   <div class="d-flex align-items-center author">
                       <div class="photo">

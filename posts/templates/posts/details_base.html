@@ -51,7 +51,8 @@
     <!-- Template Main CSS Files -->
     <link href="{% static 'assets/css/variables.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
-    <link href="{% static 'assets/css/buttom-nav.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/css/post-details.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/css/post-actions.css' %}" rel="stylesheet">
 
 </head>
 
@@ -229,9 +230,16 @@
     <!-- Template Main JS File -->
     <script src="{% static 'assets/js/main.js' %}"></script>
 
-    <!-- Post Details Page JS File (Bottom Nav) -->
-    <script src="{% static 'assets/js/buttom-nav.js' %}"></script>
+    <!-- Categories and tag filtering JS -->
+    <script src="{% static 'assets/js/categories.js' %}"></script>
 
+    <!-- Dynamic comments JS -->
+    <script src="{% static 'assets/js/comments.js' %}" defer></script>
+
+    <!-- Dynamic Post reaction abd Bookmark JS -->
+    <script src="{% static 'assets/js/post-actions.js' %}" defer></script>
+
+    
 </body>
 
 </html>

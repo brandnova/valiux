@@ -180,13 +180,8 @@ CKEDITOR_CONFIGS = {
     },
 }
 
-# Email SMTP Settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'brandnova89@gmail.com'
-EMAIL_HOST_PASSWORD = 'zxgc intt dvax quzy'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 DEFAULT_FROM_EMAIL = 'brandnova89@gmail.com'
 
 # CKEditor Configuration
@@ -306,50 +301,3 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
-
-# Zazzmin settings
-
-JAZZMIN_SETTINGS = {
-    # Title of the window (Will default to current_admin_site.site_title if absent or None)
-    'site_title': 'Valiux',
-
-    # Title on the brand, and the login screen (19 chars max)
-    'site_header': 'Valiux',
-
-    # Logo to use for your site, must be present in static files, used for login, brand and top menu
-    'site_logo': 'assets/img/valiux-removebg-preview-removebg-preview.png',
-
-    # CSS classes that are applied to the logo above
-    'site_logo_classes': 'rounded',
-
-    # Welcome text on the login screen
-    'welcome_sign': 'Welcome to Valiux',
-
-    # Copyright on the footer
-    'copyright': 'Valiux',
-
-    # The model admin to search from the search bar, search bar omitted if excluded
-    'search_model': 'auth.User',
-
-    # Field name on user model that contains avatar image, used for the avatar beside the log out
-    'user_avatar': lambda user: user.profile.avatar.url if user.profile.avatar else None,
-
-    # Custom icons for side menu apps/models
-    'icons': {
-        'auth': 'fas fa-users-cog',
-        'auth.user': 'fas fa-user',
-        'auth.Group': 'fas fa-users',
-    },
-
-    # Default expanded menu
-    'default_expanded': True,
-
-    # Custom links to be included in the top menu
-    'topmenu_links': [
-        {'name': 'Home', 'url': 'admin:index', 'permissions': ['auth.view_user']},
-    ],
-
-    # Link to put at the bottom of the sidebar
-    'show_ui_builder': False,
-
-}

@@ -1,3 +1,4 @@
+from datetime import timezone
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -110,7 +111,6 @@ def post_detail(request, slug):
     client_ip = get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '')
 
-    # Check if this IP has already viewed this post
     if not PostView.objects.filter(post=post, ip_address=client_ip).exists():
         PostView.objects.create(post=post, ip_address=client_ip, user_agent=user_agent)
         post.views += 1
@@ -141,16 +141,31 @@ def post_detail(request, slug):
 
     comments = post.comments.filter(parent__isnull=True, approved=True).order_by('-created_at')
 
-    reaction_counts = {}
-    for reaction_type, _ in Reaction.REACTION_CHOICES:
-        reaction_counts[reaction_type] = post.reactions.filter(reaction_type=reaction_type).count()
+    # Create reaction data structure
+    reactions_data = []
+    for reaction_type, reaction_name in Reaction.REACTION_CHOICES:
+        reactions_data.append({
+            'type': reaction_type,
+            'name': reaction_name,
+            'count': post.reactions.filter(reaction_type=reaction_type).count(),
+            'is_active': False  # Default value
+        })
 
+    # Check user's reaction
     user_reaction = None
+    is_bookmarked = False
     if request.user.is_authenticated:
         try:
             user_reaction = Reaction.objects.get(post=post, user=request.user)
+            # Update is_active for user's reaction
+            for reaction in reactions_data:
+                if reaction['type'] == user_reaction.reaction_type:
+                    reaction['is_active'] = True
         except Reaction.DoesNotExist:
             pass
+        
+        # Check if post is bookmarked by user
+        is_bookmarked = Bookmark.objects.filter(post=post, user=request.user).exists()
 
     # Fetch other episodes in the series
     episodes = None
@@ -171,29 +186,25 @@ def post_detail(request, slug):
         'latest_posts': latest_posts,
         'comments': comments,
         'comment_form': comment_form,
+        'reactions_data': reactions_data,
         'user_reaction': user_reaction,
-        'reaction_counts': reaction_counts,
+        'is_bookmarked': is_bookmarked,
         'similar_posts': similar_posts,
         'author_posts': author_posts,
-        'episodes': episodes,  # Pass episodes to the context
+        'episodes': episodes,
     }
     return render(request, 'posts/post_detail.html', context)
 
 
+
 @login_required
-@csrf_exempt  # Use this carefully in production
+@csrf_exempt
 def add_comment(request, slug):
-    logger.info(f"Received request method: {request.method}")
-    logger.info(f"Request POST data: {request.POST}")
-    
     if request.method == 'POST':
         try:
             post = get_object_or_404(Post, slug=slug)
             comment_text = request.POST.get('comment')
             parent_id = request.POST.get('parent_id')
-            
-            logger.info(f"Comment text: {comment_text}")
-            logger.info(f"Parent ID: {parent_id}")
             
             if not comment_text:
                 return JsonResponse({
@@ -211,27 +222,24 @@ def add_comment(request, slug):
                 approved=True
             )
             
-            logger.info(f"Comment created successfully: {comment.id}")
-            
             return JsonResponse({
                 'status': 'success', 
                 'comment': {
                     'id': comment.id,
                     'username': comment.user.username,
+                    'user_avatar': comment.user.profile.avatar.url,
                     'comment': comment.comment,
-                    'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                    'created_at': comment.created_at.isoformat(),
                     'parent_id': parent.id if parent else None,
                 }
             })
         
         except Exception as e:
-            logger.error(f"Error creating comment: {str(e)}")
             return JsonResponse({
                 'status': 'error', 
                 'message': str(e)
             }, status=400)
     
-    logger.warning("Invalid request method")
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @login_required
