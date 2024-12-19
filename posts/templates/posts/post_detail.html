@@ -106,7 +106,7 @@
   
                     
                 <!-- ======= Comments ======= -->
-                <div class="comments mt-5" id="comments-section">
+                <div class="comments mt-5">
                     <h5 class="comment-title py-4" id="comments-count">{{ comments.count }} Comments</h5>
                     
                     <div id="comments-container">
@@ -127,11 +127,13 @@
                                     {{ comment.comment }}
                                 </div>
                 
-                                <!-- Reply Button -->
-                                <button class="btn btn-sm btn-outline-secondary reply-toggle mt-2" 
-                                        data-comment-id="{{ comment.id }}">
-                                    Reply
-                                </button>
+                                {% if user.is_authenticated and post.allow_comments %}
+                                    <!-- Reply Button -->
+                                    <button class="btn btn-sm btn-outline-secondary reply-toggle mt-2" 
+                                            data-comment-id="{{ comment.id }}">
+                                        Reply
+                                    </button>
+                                {% endif %}
                 
                                 <!-- Reply Form -->
                                 <form method="post" class="reply-form mt-2" 
@@ -152,7 +154,8 @@
                                 <!-- Replies Container -->
                                 <div class="comment-replies-container" id="replies-container-{{ comment.id }}">
                                     {% if comment.replies.all %}
-                                    <div class="comment-replies bg-light p-3 mt-3 rounded">
+                                    <button class="btn btn-sm btn-link toggle-replies mb-2">Show Replies</button>
+                                    <div class="comment-replies bg-light p-3 mt-3 rounded collapsed" id="main-replies-container">
                                         <h6 class="comment-replies-title mb-4 text-muted text-uppercase">
                                             {{ comment.replies.count }} Replies
                                         </h6>
@@ -161,7 +164,9 @@
                                         <div class="reply d-flex mb-3" id="reply-{{ reply.id }}">
                                             <div class="flex-shrink-0">
                                                 <div class="avatar avatar-sm rounded-circle">
-                                                    <img class="avatar-img" src="{{ reply.user.profile.avatar.url }}" alt="{{ reply.user.first_name }} {{ reply.user.last_name }}">
+                                                    {% if reply.user.profile.avatar %}
+                                                        <img class="avatar-img" src="{{ reply.user.profile.avatar.url }}" alt="{{ reply.user.first_name }} {{ reply.user.last_name }}">
+                                                    {% endif %}
                                                     {% comment %} <img class="avatar-img" src="{% static 'assets/img/default-avatar.jpg' %}" alt="{{ reply.user.username }}"> {% endcomment %}
                                                 </div>
                                             </div>
@@ -472,4 +477,5 @@
         </div>
     </section>
     
+    {% include 'posts/includes/post_actions.html' with post=post user_reaction=user_reaction reaction_choices=Reaction.REACTION_CHOICES reaction_counts=reaction_counts is_bookmarked=is_bookmarked %}
 {% endblock %}

@@ -1,16 +1,31 @@
 {% extends 'core/base.html' %}
 {% block title %}{{ page.title }}{% endblock %}
 {% block content %}
-    <section class="container py-5">
-        {% if ads.content_top %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            {% if ads.content_top %}
             <div class="mb-4">
                 {{ ads.content_top.code|safe }}
             </div>
-        {% endif %}
+            {% endif %}
 
-        <h1 class="mb-4">{{ page.title }}</h1>
-        <div class="static-content">
-            {{ page.content|safe }}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <h1 class="fw-bold mb-4">{{ page.title }}</h1>
+                    <div class="static-content">
+                        {{ page.content|safe }}
+                    </div>
+                </div>
+            </div>
+
+            {% if ads.content_bottom %}
+            <div class="mt-4">
+                {{ ads.content_bottom.code|safe }}
+            </div>
+            {% endif %}
         </div>
-    </section>
+    </div>
+</div>
 {% endblock %}

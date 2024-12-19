@@ -1,0 +1,41 @@
+/* Style the subcategories */
+.subcategories {
+    margin-left: 15px;
+    max-height: 0; /* Collapse by default */
+    overflow: hidden;
+    transition: max-height 0.3s ease-out; /* Smooth transition */
+}
+
+/* Expanded state */
+.subcategories.show {
+    max-height: 500px; /* A high enough value to accommodate content */
+}
+
+/* Optional styling for toggle button */
+.toggle-subcategories {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 5px;
+    color: #555;
+}
+
+.toggle-subcategories i {
+    transition: transform 0.3s ease-out;
+}
+
+
+/* Collapse Comment replies section */
+.comment-replies.collapsed {
+    display: none;
+}
+
+.toggle-replies {
+    padding: 0;
+    text-decoration: none;
+}
+
+.toggle-replies:hover {
+    text-decoration: underline;
+}

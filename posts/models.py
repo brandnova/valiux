@@ -1,8 +1,13 @@
+import os
+from PIL import Image
+from io import BytesIO
 from django.db import models
 from django.utils.text import slugify
 from django.utils.timezone import now
 from django.contrib.auth.models import User
 from django_ckeditor_5.fields import CKEditor5Field
+from django.core.files.uploadedfile import InMemoryUploadedFile
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -67,7 +72,6 @@ class Series(models.Model):
         from django.urls import reverse
         return reverse('series_detail', args=[self.slug])
 
-
 class Post(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -109,17 +113,41 @@ class Post(models.Model):
             models.Index(fields=['status', 'published_date']),
         ]
 
-    def get_og_title(self):
-        """Returns the Open Graph title, prioritizing the SEO title."""
-        return self.seo_title or self.title
+    def save(self, *args, **kwargs):
+        # Convert image to WebP format if present
+        if self.image:
+            self.image = self.convert_to_webp(self.image)
+        # Automatically generate slug if missing
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
-    def get_meta_description(self):
-        """Returns the meta description, prioritizing the meta field, then excerpt."""
-        return self.meta_description or self.excerpt or self.content[:160]
+    def convert_to_webp(self, image):
+        """Converts the given image to WebP format."""
+        # Open the image using Pillow
+        img = Image.open(image)
+        img_format = img.format
 
-    def get_meta_keywords(self):
-        """Returns the meta keywords."""
-        return self.meta_keywords
+        # Only convert if it's not already WebP
+        if img_format != 'WEBP':
+            output = BytesIO()
+            img = img.convert("RGB")  # Ensure the image is in RGB mode
+            webp_filename = f"{os.path.splitext(image.name)[0]}.webp"
+
+            # Save the image in WebP format
+            img.save(output, format='WEBP', quality=80)
+            output.seek(0)
+
+            # Replace the uploaded image file with the new WebP image
+            return InMemoryUploadedFile(
+                output,
+                'ImageField',
+                webp_filename,
+                'image/webp',
+                output.getbuffer().nbytes,
+                None
+            )
+        return image
 
     def get_absolute_url(self):
         """Returns the full URL for the post."""
@@ -128,18 +156,6 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-    
-    # Custom helper method for auto-post publication.
-    def check_and_publish(self):
-        """Update post status to 'Published' if the published_date has passed."""
-        if self.published_date and self.published_date <= now():
-            self.status = 'published'
-            self.save()
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
 
 
 class PostView(models.Model):

@@ -1,0 +1,70 @@
+<div class="post-actions-bar">
+    <div class="actions-container">
+        {% if user.is_authenticated %}
+        <!-- Reactions Button and Popup -->
+        <div class="action-item reactions-wrapper">
+            <button class="action-btn reactions-toggle">
+                <i class="bi bi-emoji-smile"></i>
+                <span class="reaction-count">{{ post.reactions.count }}</span>
+            </button>
+            
+            <div class="reactions-popup" style="display: none;">
+                <div class="reactions-grid">
+                    {% for reaction in reactions_data %}
+                    <button class="reaction-btn {% if reaction.is_active %}active{% endif %}"
+                            data-reaction="{{ reaction.type }}"
+                            data-post-slug="{{ post.slug }}">
+                        <span class="reaction-icon">
+                            {% if reaction.type == 'like' %}<i class="bi bi-hand-thumbs-up"></i>
+                            {% elif reaction.type == 'love' %}<i class="bi bi-heart"></i>
+                            {% elif reaction.type == 'laugh' %}<i class="bi bi-emoji-laughing"></i>
+                            {% elif reaction.type == 'surprise' %}<i class="bi bi-emoji-surprise"></i>
+                            {% elif reaction.type == 'sad' %}<i class="bi bi-emoji-frown"></i>
+                            {% elif reaction.type == 'dislike' %}<i class="bi bi-hand-thumbs-down"></i>{% endif %}
+                        </span>
+                        <span class="reaction-label">{{ reaction.name }}</span>
+                        <span class="reaction-count" id="count-{{ reaction.type }}">{{ reaction.count }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookmark Button -->
+        <div class="action-item">
+            <button class="action-btn bookmark-btn {% if is_bookmarked %}active{% endif %}"
+                    data-post-slug="{{ post.slug }}">
+                <i class="bi bi-bookmark{% if is_bookmarked %}-fill{% endif %}"></i>
+                <span class="bookmark-count">{{ post.bookmarked_by.count }}</span>
+            </button>
+        </div>
+        {% endif %}
+        
+        <!-- Share Button and Popup -->
+        <div class="action-item share-wrapper">
+            <button class="action-btn share-toggle">
+                <i class="bi bi-share"></i>
+            </button>
+            
+            <div class="share-popup" style="display: none;">
+                <div class="share-options-grid">
+                    <button class="share-option" data-share="facebook">
+                        <i class="bi bi-facebook"></i> Facebook
+                    </button>
+                    <button class="share-option" data-share="twitter">
+                        <i class="bi bi-twitter"></i> Twitter
+                    </button>
+                    <button class="share-option" data-share="whatsapp">
+                        <i class="bi bi-whatsapp"></i> WhatsApp
+                    </button>
+                    <button class="share-option" data-share="copy">
+                        <i class="bi bi-link-45deg"></i> Copy Link
+                    </button>
+                    <button class="share-option" data-share="native">
+                        <i class="bi bi-share"></i> More Options
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
