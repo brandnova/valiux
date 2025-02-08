@@ -78,7 +78,7 @@
 
           <div class="col-lg-8">
             <div class="row g-5">
-              <div class="col-lg-4 border-start custom-border">
+              {% comment %} <div class="col-lg-4 border-start custom-border">
                 <div class="post-entry-1">
                   <div class="post-meta"><span class="date">Sport</span> <span class="mx-1">&bullet;</span> <span>Jul 5th '22</span></div>
                   <h2><a href="single-post.html">Let’s Get Back to Work, New York</a></h2>
@@ -91,7 +91,7 @@
                   <h2><a href="single-post.html">6 Easy Steps To Create Your Own Cute Merch For Instagram</a></h2>
                 </div>
                 
-              </div>
+              </div> {% endcomment %}
 
               <!-- Trending Section -->
               <div class="col-lg-4">
@@ -101,7 +101,7 @@
                   <ul class="trending-post">
                     {% for post in trending_posts %}
                     <li>
-                      <a href="single-post.html">
+                      <a href="{% url 'post_detail' post.slug %}">
                         <span class="number">*</span>
                         <h3>{{ post.title }}</h3>
                         <span class="author">{{ post.author.first_name }} {{ post.author.last_name }}</span>
