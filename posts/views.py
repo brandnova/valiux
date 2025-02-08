@@ -2,6 +2,7 @@ from datetime import timezone
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpRequest
 from django.utils.timezone import now
@@ -314,3 +315,35 @@ def toggle_bookmark(request, slug):
         'status': 'added' if created else 'removed',
         'bookmark_count': post.bookmarked_by.count()
     })
+
+
+@require_GET
+@csrf_exempt
+def published_posts_api(request):
+    """
+    API endpoint to retrieve all published posts.
+    Returns published posts ordered by publication date.
+    """
+    try:
+        posts = Post.objects.filter(status='published')\
+            .order_by('-published_date')\
+            .values(
+                'id', 
+                'title', 
+                'slug', 
+                'excerpt', 
+                'tag', 
+                'published_date', 
+                'image'
+            )
+        
+        return JsonResponse({
+            'status': 'success',
+            'count': posts.count(),
+            'posts': list(posts)
+        }, safe=False)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)

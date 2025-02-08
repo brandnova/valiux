@@ -56,3 +56,16 @@ class StaticPageDetailView(DetailView):
     model = StaticPage
     template_name = 'core/static_page_detail.html'
     context_object_name = 'page'
+
+
+def custom_404(request, exception):
+    context = {}
+    return render(request, '404.html', context, status=404)
+
+def custom_403(request, exception):
+    context = {}
+    return render(request, '403.html', context, status=403)
+
+def custom_500(request):
+    context = {}
+    return render(request, '500.html', context, status=500)

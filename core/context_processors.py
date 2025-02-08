@@ -1,8 +1,7 @@
-from datetime import datetime, date
+from datetime import datetime, timedelta, date
 from .models import SiteSettings, StaticPage
 from django.core.cache import cache
 from django.utils.timezone import now
-from datetime import timedelta
 from ads.models import Ad
 from posts.models import *
 
