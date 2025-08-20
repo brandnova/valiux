@@ -331,10 +331,8 @@ def published_posts_api(request):
                 'id', 
                 'title', 
                 'slug', 
-                'excerpt', 
                 'tag', 
-                'published_date', 
-                'image'
+                'published_date',
             )
         
         return JsonResponse({
